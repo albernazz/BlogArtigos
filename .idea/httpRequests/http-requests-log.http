@@ -1,0 +1,132 @@
+POST http://localhost:8080/comentarios
+Content-Type: application/json
+Content-Length: 104
+User-Agent: IntelliJ HTTP Client/IntelliJ IDEA 2025.2.4
+Accept-Encoding: br, deflate, gzip, x-gzip
+Accept: */*
+
+{
+  "artigoId": "ART-2025-00001",
+  "autor": "Leitor Anônimo",
+  "texto": "Ótimo artigo, parabéns!"
+}
+
+<> 2025-11-15T202357.201.json
+
+###
+
+POST http://localhost:8080/artigos
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJBUEkgQmxvZ0FydGlnb3MiLCJzdWIiOiJhdXRvckBlbWFpbC5jb20iLCJpZCI6IlVTUi0wMDAxIiwiZXhwIjoxNzYzMjU0NDY2fQ.B1Ke14o1RQFsadAfMTk99tj3-64gQaxuHpQKGk95Iyg
+Content-Length: 157
+User-Agent: IntelliJ HTTP Client/IntelliJ IDEA 2025.2.4
+Accept-Encoding: br, deflate, gzip, x-gzip
+Accept: */*
+
+{
+  "titulo": "Meu Primeiro Artigo!",
+  "conteudo": "Este é o conteúdo do meu primeiro artigo, funcionou!",
+  "usuarioId": "USR-0001",
+  "categoriaId": 1
+}
+
+<> 2025-11-15T201527.200.txt
+
+###
+
+POST http://localhost:8080/login
+Content-Type: application/json
+Content-Length: 53
+User-Agent: IntelliJ HTTP Client/IntelliJ IDEA 2025.2.4
+Accept-Encoding: br, deflate, gzip, x-gzip
+Accept: */*
+
+{
+  "email": "autor@email.com",
+  "senha": "123456"
+}
+
+<> 2025-11-15T201510.200.json
+
+###
+
+POST http://localhost:8080/artigos
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJBUEkgQmxvZ0FydGlnb3MiLCJzdWIiOiJhdXRvckBlbWFpbC5jb20iLCJpZCI6IlVTUi0wMDAxIiwiZXhwIjoxNzYzMjU0NDY2fQ.B1Ke14o1RQFsadAfMTk99tj3-64gQaxuHpQKGk95Iyg
+Content-Length: 157
+User-Agent: IntelliJ HTTP Client/IntelliJ IDEA 2025.2.4
+Accept-Encoding: br, deflate, gzip, x-gzip
+Accept: */*
+
+{
+  "titulo": "Meu Primeiro Artigo!",
+  "conteudo": "Este é o conteúdo do meu primeiro artigo, funcionou!",
+  "usuarioId": "USR-0001",
+  "categoriaId": 1
+}
+
+###
+
+POST http://localhost:8080/artigos
+Content-Type: application/json
+Authorization: Bearer <COLE O TOKEN AQUI>
+Content-Length: 157
+User-Agent: IntelliJ HTTP Client/IntelliJ IDEA 2025.2.4
+Accept-Encoding: br, deflate, gzip, x-gzip
+Accept: */*
+
+{
+  "titulo": "Meu Primeiro Artigo!",
+  "conteudo": "Este é o conteúdo do meu primeiro artigo, funcionou!",
+  "usuarioId": "USR-0001",
+  "categoriaId": 1
+}
+
+###
+
+POST http://localhost:8080/login
+Content-Type: application/json
+Content-Length: 53
+User-Agent: IntelliJ HTTP Client/IntelliJ IDEA 2025.2.4
+Accept-Encoding: br, deflate, gzip, x-gzip
+Accept: */*
+
+{
+  "email": "autor@email.com",
+  "senha": "123456"
+}
+
+<> 2025-11-15T195426.200.json
+
+###
+
+POST http://localhost:8080/registrar
+Content-Type: application/json
+Content-Length: 53
+User-Agent: IntelliJ HTTP Client/IntelliJ IDEA 2025.2.4
+Accept-Encoding: br, deflate, gzip, x-gzip
+Accept: */*
+
+{
+  "email": "autor@email.com",
+  "senha": "123456"
+}
+
+<> 2025-11-15T195227.200.txt
+
+###
+
+POST http://localhost:8080/registrar
+Content-Type: application/json
+Content-Length: 53
+User-Agent: IntelliJ HTTP Client/IntelliJ IDEA 2025.2.4
+Accept-Encoding: br, deflate, gzip, x-gzip
+Accept: */*
+
+{
+  "email": "autor@email.com",
+  "senha": "123456"
+}
+
+###
+

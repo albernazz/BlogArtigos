@@ -1,4 +1,4 @@
-
+// Substitua em: com/example/BlogArtigos/gruposusuarios/GruposUsuarios.java
 package com.example.BlogArtigos.gruposusuarios;
 
 import jakarta.persistence.*;
@@ -15,12 +15,11 @@ public class GruposUsuarios {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private Integer id; // <-- CORRIGIDO: de Long para Integer
 
     @Column(name = "nome_grupo", unique = true, nullable = false)
     private String nomeGrupo;
 
-    // Você pode adicionar um construtor se precisar criar grupos
     public GruposUsuarios(String nomeGrupo) {
         this.nomeGrupo = nomeGrupo;
     }

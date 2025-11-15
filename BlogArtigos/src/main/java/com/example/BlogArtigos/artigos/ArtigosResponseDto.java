@@ -1,9 +1,13 @@
+// Substitua em: com/example/BlogArtigos/artigos/ArtigosResponseDto.java
 package com.example.BlogArtigos.artigos;
 
 import com.example.BlogArtigos.usuarios.Usuarios;
 
-public record ArtigosResponseDto(String id, String title, String texto, Usuarios usuario) {
+// 1. Renomeie aqui
+public record ArtigosResponseDto(String id, String titulo, String conteudo, Usuarios usuario) {
+
     public ArtigosResponseDto (Artigos artigos){
-        this(artigos.getId(), artigos.getTitle(), artigos.getTexto(), artigos.getUsuario());
+        // 2. Renomeie o método getter (Lombok cria getTitulo() agora)
+        this(artigos.getId(), artigos.getTitulo(), artigos.getConteudo(), artigos.getUsuario());
     }
 }

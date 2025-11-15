@@ -18,13 +18,16 @@ public class Artigos {
 
     @Id
     private String id;
-    private String title;
-    @Column(columnDefinition = "TEXT")
-    private String texto;
+
+    // --- CORREÇÃO AQUI ---
+    @Column(name = "titulo") // 1. Mude o nome da coluna
+    private String titulo; // 2. Renomeie o campo
+    // --- FIM DA CORREÇÃO ---
+
+    @Column(name = "conteudo", columnDefinition = "TEXT")
+    private String conteudo;
 
     @ManyToOne
     @JoinColumn(name = "usuario_id", nullable = false)
     private Usuarios usuario;
-
-
 }

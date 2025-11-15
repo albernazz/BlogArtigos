@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="pt-br" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Home - Blog</title>
+    <style>
+        body { font-family: Arial, sans-serif; background-color: #f4f4f4; margin: 0; padding: 20px; }
+        .container { max-width: 900px; margin: auto; background: #fff; padding: 20px; border-radius: 8px; }
+        #artigos-lista { margin-top: 20px; }
+        .artigo { border: 1px solid #ccc; padding: 15px; margin-bottom: 15px; border-radius: 5px; }
+        .artigo h3 { margin-top: 0; }
+        .artigo-meta { font-size: 0.9em; color: #555; }
+
+        /* Formulário de Novo Artigo */
+        #form-novo-artigo { background: #f9f9f9; padding: 20px; border-radius: 8px; margin-top: 30px; }
+        #form-novo-artigo h2 { margin-top: 0; }
+        #form-novo-artigo div { margin-bottom: 15px; }
+        #form-novo-artigo label { display: block; margin-bottom: 5px; font-weight: bold; }
+        #form-novo-artigo input, #form-novo-artigo textarea, #form-novo-artigo select { width: 98%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; }
+        #form-novo-artigo button { padding: 10px 15px; background-color: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer; }
+        #form-novo-artigo button:hover { background-color: #218838; }
+        #logout-button { background: #dc3545; color: white; padding: 10px 15px; border: none; border-radius: 4px; cursor: pointer; float: right; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <button id="logout-button">Sair</button>
+    <h1>Blog de Artigos</h1>
+
+    <div id="form-novo-artigo">
+        <h2>Publicar Novo Artigo</h2>
+        <form id="novo-artigo-form">
+            <div>
+                <label for="titulo">Título:</label>
+                <input type="text" id="titulo" required>
+            </div>
+            <div>
+                <label for="conteudo">Conteúdo:</label>
+                <textarea id="conteudo" rows="5" required></textarea>
+            </div>
+            <div>
+                <label for="categoriaId">Categoria:</label>
+                <select id="categoriaId" required>
+                    <option value="1">Geral</option>
+                </select>
+            </div>
+            <button type="submit">Publicar</button>
+            <div id="form-error" style="color: red; margin-top: 10px;"></div>
+        </form>
+    </div>
+
+    <h2>Artigos Recentes</h2>
+    <div id="artigos-lista">
+    </div>
+</div>
+
+<script>
+    // Pega o token salvo no login
+    const token = localStorage.getItem('jwt_token');
+
+    // Função para fazer Logout
+    document.getElementById('logout-button').addEventListener('click', () => {
+        localStorage.removeItem('jwt_token');
+        window.location.href = '/'; // Volta para o login
+    });
+
+    // 1. Verifica se o usuário está logado
+    if (!token) {
+        // Se não tiver token, chuta de volta para a página de login
+        window.location.href = '/';
+    }
+
+    // Função para decodificar o ID do usuário do token (simplificado)
+    function getUsuarioIdFromToken(token) {
+        try {
+            // Decodifica a parte do meio (payload) do JWT
+            const payload = JSON.parse(atob(token.split('.')[1]));
+            return payload.id; // Retorna o ID do usuário (ex: 'USR-0001')
+        } catch (e) {
+            console.error('Token inválido:', e);
+            return null;
+        }
+    }
+
+    const usuarioId = getUsuarioIdFromToken(token);
+
+    // 2. Busca e exibe os artigos
+    async function carregarArtigos() {
+        const lista = document.getElementById('artigos-lista');
+        lista.innerHTML = 'Carregando...';
+
+        const response = await fetch('/artigos', { method: 'GET' });
+        const artigos = await response.json();
+
+        lista.innerHTML = ''; // Limpa o "Carregando..."
+
+        artigos.forEach(artigo => {
+            const div = document.createElement('div');
+            div.className = 'artigo';
+            div.innerHTML = `
+                    <h3>${artigo.titulo}</h3>
+                    <p>${artigo.conteudo.substring(0, 150)}...</p>
+                    <p class="artigo-meta">Por: <strong>${artigo.usuario.nome}</strong></p>
+                `;
+            lista.appendChild(div);
+        });
+    }
+
+    // 3. Lógica para ENVIAR o formulário de novo artigo
+    document.getElementById('novo-artigo-form').addEventListener('submit', async function(event) {
+        event.preventDefault();
+
+        const titulo = document.getElementById('titulo').value;
+        const conteudo = document.getElementById('conteudo').value;
+        const categoriaId = document.getElementById('categoriaId').value;
+        const formError = document.getElementById('form-error');
+
+        const body = {
+            titulo: titulo,
+            conteudo: conteudo,
+            usuarioId: usuarioId, // Pego do token
+            categoriaId: parseInt(categoriaId) // Converte para número
+        };
+
+        try {
+            const response = await fetch('/artigos', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}` // Envia o token!
+                },
+                body: JSON.stringify(body)
+            });
+
+            if (response.status === 403) {
+                throw new Error('Acesso negado. Você não tem permissão de AUTOR.');
+            }
+            if (!response.ok) {
+                throw new Error('Erro ao publicar o artigo.');
+            }
+
+            // Se deu certo:
+            formError.textContent = '';
+            document.getElementById('novo-artigo-form').reset(); // Limpa o formulário
+            await carregarArtigos(); // Atualiza a lista de artigos
+
+        } catch (error) {
+            formError.textContent = error.message;
+        }
+    });
+
+    // Carrega os artigos assim que a página abre
+    carregarArtigos();
+
+</script>
+</body>
+</html>
