@@ -1,6 +1,13 @@
+
 package com.example.BlogArtigos.artigos;
 
-import com.example.BlogArtigos.usuarios.Usuarios;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 
-public record ArtigosRequestDto(String title, String texto, Usuarios usuario) {
+public record ArtigosRequestDto(
+        @NotBlank String title,
+        @NotBlank String texto,
+        @NotBlank String usuarioId,
+        @NotNull Integer categoriaId
+) {
 }
