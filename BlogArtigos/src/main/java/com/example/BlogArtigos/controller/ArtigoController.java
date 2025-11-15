@@ -16,6 +16,8 @@ public class ArtigoController {
     @Autowired
     private ArtigosRepository repository;
 
+
+    @CrossOrigin(origins = "*", allowedHeaders = "*")
     @PostMapping
     public void criarArtigo(@RequestBody ArtigosRequestDto data){
         Artigos artigosData = new Artigos();

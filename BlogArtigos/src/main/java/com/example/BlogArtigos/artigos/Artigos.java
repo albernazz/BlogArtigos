@@ -15,10 +15,14 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @EqualsAndHashCode(of = "id")
 public class Artigos {
+
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     private String title;
+    @Column(columnDefinition = "TEXT")
     private String texto;
+    @ManyToOne
+    @JoinColumn(name = "usuario_id", nullable = false)
     private Usuarios usuario;
 
     public Artigos(ArtigosRequestDto data){
