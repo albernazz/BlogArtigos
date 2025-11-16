@@ -4,10 +4,12 @@ package com.example.BlogArtigos.comentarios;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import java.util.List;
 
-// Usamos MongoRepository em vez de JpaRepository
 public interface ComentarioRepository extends MongoRepository<Comentario, String> {
 
-    // O Spring Data MongoDB vai criar esta query automaticamente:
-    // "db.comentarios.find({ 'artigoId': ? })"
     List<Comentario> findByArtigoId(String artigoId);
+
+    // --- MÉTODO NOVO ---
+    // Cria um 'DELETE FROM comentarios WHERE artigoId = ?'
+    void deleteByArtigoId(String artigoId);
+    // --- FIM DO MÉTODO NOVO ---
 }

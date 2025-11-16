@@ -1,6 +1,7 @@
 document.addEventListener('DOMContentLoaded', () => {
     const token = localStorage.getItem('jwt_token');
 
+    // 1. Verifica se o utilizador está logado
     if (!token) {
         window.location.href = '/';
         return;
@@ -8,21 +9,23 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Elementos do DOM ---
     const logoutButton = document.getElementById('logout-button');
-    const novoArtigoFormContainer = document.getElementById('form-novo-artigo'); // Modificado
+    const novoArtigoFormContainer = document.getElementById('form-novo-artigo'); // Pega o container
     const novoArtigoForm = document.getElementById('novo-artigo-form');
     const searchBar = document.getElementById('search-bar');
     const artigosLista = document.getElementById('artigos-lista');
     const statsLink = document.getElementById('stats-link');
-    const toggleFormBtn = document.getElementById('toggle-form-btn'); // <-- NOVO
+    const toggleFormBtn = document.getElementById('toggle-form-btn'); // Botão de toggle
 
     let debounceTimer;
 
     // --- Decodificador de Token ---
     function getUsuarioInfoFromToken(token) {
-        // ... (código idêntico)
         try {
             const payload = JSON.parse(atob(token.split('.')[1]));
-            return { id: payload.id, roles: payload.scope || [] };
+            return {
+                id: payload.id,
+                roles: payload.scope || []
+            };
         } catch (e) {
             console.error('Token inválido:', e);
             localStorage.removeItem('jwt_token');
@@ -36,35 +39,35 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Lógica de UI (Visibilidade) ---
     function setupUIBasedOnRoles() {
+        // Mostra/esconde link de Stats
         if (usuarioLogado.roles.includes('ROLE_ADMIN')) {
             statsLink.style.display = 'inline-block';
         } else {
             statsLink.style.display = 'none';
         }
 
-        // --- CORREÇÃO AQUI ---
-        // Agora mostramos/escondemos o BOTÃO, não o formulário
+        // Mostra/esconde botão de publicar
         if (usuarioLogado.roles.includes('ROLE_AUTOR') || usuarioLogado.roles.includes('ROLE_ADMIN')) {
             toggleFormBtn.style.display = 'block';
         } else {
             toggleFormBtn.style.display = 'none';
         }
 
-        // Listener para o botão de toggle
+        // Listener para o botão de toggle do formulário
         toggleFormBtn.addEventListener('click', () => {
             const isHidden = novoArtigoFormContainer.style.display === 'none';
             novoArtigoFormContainer.style.display = isHidden ? 'block' : 'none';
             toggleFormBtn.textContent = isHidden ? 'Esconder Formulário -' : 'Publicar Novo Artigo +';
         });
-        // --- FIM DA CORREÇÃO ---
     }
 
-    // --- (Logout, Busca, Novo Artigo, Categorias, Artigos, Comentários... tudo idêntico) ---
+    // --- Logout (Restaurado) ---
     logoutButton.addEventListener('click', () => {
         localStorage.removeItem('jwt_token');
         window.location.href = '/';
     });
 
+    // --- Lógica de Busca (Restaurada) ---
     searchBar.addEventListener('input', (event) => {
         clearTimeout(debounceTimer);
         const termo = event.target.value;
@@ -73,6 +76,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 500);
     });
 
+    // --- Lógica de Novo Artigo (Restaurada) ---
     novoArtigoForm.addEventListener('submit', async function(event) {
         event.preventDefault();
         const titulo = document.getElementById('titulo').value;
@@ -113,6 +117,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
+    // --- Carregador de Categorias (Restaurado) ---
     async function carregarCategorias() {
         const selectCategoria = document.getElementById('categoriaId');
         try {
@@ -138,12 +143,14 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    // --- Carregador Principal de Artigos (COM LÓGICA DE DELETE) ---
     async function carregarArtigos(termoDeBusca = "") {
         artigosLista.innerHTML = '<p>Carregando...</p>';
         let url = '/artigos';
         if (termoDeBusca) {
             url = `/artigos?busca=${encodeURIComponent(termoDeBusca)}`;
         }
+
         try {
             const response = await fetch(url, { method: 'GET' });
             const artigos = await response.json();
@@ -152,16 +159,27 @@ document.addEventListener('DOMContentLoaded', () => {
                 artigosLista.innerHTML = '<p>Nenhum artigo encontrado.</p>';
                 return;
             }
+
             artigos.forEach(artigo => {
                 const div = document.createElement('div');
                 div.className = 'artigo';
-                let editButtonHtml = '';
-                if (usuarioLogado.id === artigo.usuarioId) {
-                    editButtonHtml = `<a href="/editar/${artigo.artigoId}" class="edit-button">Editar</a>`;
+
+                // Lógica de botões (Editar e Apagar)
+                let botoesHtml = '';
+                const isDono = usuarioLogado.id === artigo.usuarioId;
+                const isAdmin = usuarioLogado.roles.includes('ROLE_ADMIN');
+
+                // Só o dono pode editar
+                if (isDono) {
+                    botoesHtml += `<a href="/editar/${artigo.artigoId}" class="edit-button">Editar</a>`;
                 }
+                // O Dono OU o Admin podem apagar
+                if (isDono || isAdmin) {
+                    botoesHtml += `<button class="delete-button" data-artigo-id="${artigo.artigoId}">Apagar</button>`;
+                }
+
                 div.innerHTML = `
-                    ${editButtonHtml}
-                    <span class="artigo-categoria">${artigo.categoriaNome}</span> 
+                    ${botoesHtml} <span class="artigo-categoria">${artigo.categoriaNome}</span> 
                     <h3>${artigo.titulo}</h3>
                     <p>${artigo.conteudo.substring(0, 150)}...</p>
                     <p class="artigo-meta">Por: <strong>${artigo.autorNome}</strong></p>
@@ -176,16 +194,55 @@ document.addEventListener('DOMContentLoaded', () => {
                         </form>
                     </div>
                 `;
+
                 artigosLista.appendChild(div);
+
+                // Carrega comentários
                 const containerComentarios = div.querySelector(`#comentarios-${artigo.artigoId}`);
                 carregarComentarios(artigo.artigoId, containerComentarios);
+
+                // Liga o listener do form de comentário
                 div.querySelector('.comentario-form').addEventListener('submit', submeterComentario);
+
+                // --- LISTENER NOVO (Delete) ---
+                const deleteBtn = div.querySelector('.delete-button');
+                if (deleteBtn) {
+                    deleteBtn.addEventListener('click', deletarArtigo);
+                }
             });
         } catch (error) {
             artigosLista.innerHTML = '<p style="color: red;">Erro ao carregar artigos.</p>';
         }
     }
 
+    // --- FUNÇÃO NOVA (Delete) ---
+    async function deletarArtigo(event) {
+        const artigoId = event.target.dataset.artigoId;
+
+        if (!window.confirm("Tem certeza que deseja apagar este artigo?\nEsta ação não pode ser desfeita e apagará todos os comentários.")) {
+            return;
+        }
+
+        try {
+            const response = await fetch(`/artigos/${artigoId}`, {
+                method: 'DELETE',
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+
+            if (response.status === 403) { throw new Error('Acesso negado. Você não tem permissão para apagar este artigo.'); }
+            if (response.status === 404) { throw new Error('Artigo não encontrado.'); }
+            if (!response.ok) { throw new Error('Erro ao apagar o artigo.'); }
+
+            await carregarArtigos(searchBar.value); // Recarrega a lista (mantendo a busca atual)
+
+        } catch (error) {
+            alert(error.message);
+        }
+    }
+
+    // --- Funções de Comentários (Restauradas) ---
     async function carregarComentarios(artigoId, container) {
         try {
             const response = await fetch(`/comentarios/${artigoId}`, { method: 'GET' });
@@ -235,7 +292,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // --- Inicialização da Página ---
-    setupUIBasedOnRoles(); // Executa a nova lógica de visibilidade
+    setupUIBasedOnRoles();
     carregarArtigos();
     carregarCategorias();
 });

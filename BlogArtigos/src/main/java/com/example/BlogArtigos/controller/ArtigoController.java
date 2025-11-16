@@ -1,14 +1,19 @@
-
+// Substitua em: com/example/BlogArtigos/controller/ArtigoController.java
 package com.example.BlogArtigos.controller;
 
 import com.example.BlogArtigos.artigos.*;
+import com.example.BlogArtigos.comentarios.ComentarioRepository; // Importar
+import com.example.BlogArtigos.usuarios.Usuarios; // Importar
 import com.example.BlogArtigos.vwartigospublicos.VwArtigosPublicos;
 import com.example.BlogArtigos.vwartigospublicos.VwArtigosPublicosRepository;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus; // Importar
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal; // Importar
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
+
 import java.util.List;
 
 @RestController
@@ -21,36 +26,21 @@ public class ArtigoController {
     @Autowired
     private VwArtigosPublicosRepository vwRepository;
 
-    // --- CORREÇÃO APLICADA AQUI ---
-    /**
-     * GET /artigos
-     * Lista todos os artigos (usando a View VW_ARTIGOS_PUBLICOS)
-     * Agora aceita um parâmetro opcional '?busca=termo'
-     */
-    @GetMapping
-    public ResponseEntity<List<VwArtigosPublicos>> getAll(
-            // 1. Adiciona o parâmetro de busca opcional
-            @RequestParam(name = "busca", required = false) String termoDeBusca
-    ){
-        List<VwArtigosPublicos> artigos;
+    @Autowired
+    private ComentarioRepository comentarioRepository; // 1. Injetar o repo de comentários
 
+    // ... (Métodos GET /artigos e GET /artigos/{id} continuam iguais) ...
+    @GetMapping
+    public ResponseEntity<List<VwArtigosPublicos>> getAll(@RequestParam(name = "busca", required = false) String termoDeBusca){
+        List<VwArtigosPublicos> artigos;
         if (termoDeBusca == null || termoDeBusca.trim().isEmpty()) {
-            // 2. Se não houver busca, retorna tudo
             artigos = vwRepository.findAll();
         } else {
-            // 3. Se houver busca, usa o novo método do repositório
-            //    Isto ativará o índice IDX_ARTIGO_TITULO
             artigos = vwRepository.findByTituloContainingIgnoreCase(termoDeBusca);
         }
-
         return ResponseEntity.ok(artigos);
     }
-    // --- FIM DA CORREÇÃO ---
 
-    /**
-     * GET /artigos/{id}
-     * Busca um artigo específico pela sua ID para edição.
-     */
     @GetMapping("/{id}")
     public ResponseEntity<Artigos> getArtigoById(@PathVariable String id) {
         return repository.findById(id)
@@ -58,10 +48,7 @@ public class ArtigoController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
-    /**
-     * POST /artigos
-     * Cria um novo artigo (usando a Procedure SP_PUBLICAR_ARTIGO)
-     */
+    // ... (Método POST /artigos continua igual) ...
     @CrossOrigin(origins = "*", allowedHeaders = "*")
     @PostMapping
     public ResponseEntity<String> criarArtigo(@RequestBody @Valid ArtigosRequestDto data){
@@ -74,19 +61,52 @@ public class ArtigoController {
         return ResponseEntity.ok(novoArtigoId);
     }
 
-    /**
-     * PUT /artigos/{id}
-     * Atualiza um artigo existente (dispara as Triggers de UPDATE)
-     */
+    // ... (Método PUT /artigos/{id} continua igual) ...
     @PutMapping("/{id}")
     @Transactional
     public ResponseEntity<Artigos> atualizarArtigo(@PathVariable String id, @RequestBody @Valid ArtigoUpdateDto data) {
         Artigos artigo = repository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Artigo não encontrado")); // Simplificado
+                .orElseThrow(() -> new RuntimeException("Artigo não encontrado"));
 
         artigo.setTitulo(data.titulo());
         artigo.setConteudo(data.conteudo());
 
         return ResponseEntity.ok(artigo);
+    }
+
+    // --- MÉTODO NOVO ---
+    /**
+     * DELETE /artigos/{id}
+     * Apaga um artigo e TODOS os seus comentários (no MongoDB).
+     */
+    @DeleteMapping("/{id}")
+    @Transactional
+    public ResponseEntity<Void> deletarArtigo(
+            @PathVariable String id,
+            @AuthenticationPrincipal Usuarios usuarioLogado
+    ) {
+        // 1. Encontra o artigo
+        Artigos artigo = repository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Artigo não encontrado"));
+
+        // 2. VERIFICAÇÃO DE PERMISSÃO (Dono ou Admin)
+        boolean isAdmin = usuarioLogado.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+        boolean isDono = artigo.getUsuario().getId().equals(usuarioLogado.getId());
+
+        if (!isAdmin && !isDono) {
+            // Retorna 403 Forbidden (Acesso Negado)
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
+
+        // 3. Apaga os comentários do MongoDB
+        comentarioRepository.deleteByArtigoId(id);
+
+        // 4. Apaga o artigo do MySQL
+        // (O ON DELETE CASCADE do seu SQL [fonte: 1] irá apagar as entradas de 'artigo_categoria')
+        repository.delete(artigo);
+
+        // Retorna 204 No Content (Sucesso, sem corpo)
+        return ResponseEntity.noContent().build();
     }
 }

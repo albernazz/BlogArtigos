@@ -297,3 +297,22 @@ tr:nth-child(even) {
 #form-novo-artigo {
     display: none; /* Escondido por defeito */
 }
+
+.delete-button {
+    position: absolute;
+    top: 50px; /* Posição abaixo do botão "Editar" */
+    right: 15px;
+    font-size: 0.8em;
+    padding: 5px 10px;
+    background-color: var(--cor-perigo);
+    color: white;
+    border-radius: 4px;
+    text-decoration: none;
+    border: none;
+    cursor: pointer;
+    font-weight: 500;
+    transition: background-color 0.2s;
+}
+.delete-button:hover {
+    background-color: #c82333;
+}
