@@ -11,8 +11,7 @@
         .artigo { border: 1px solid #ccc; padding: 15px; margin-bottom: 15px; border-radius: 5px; }
         .artigo h3 { margin-top: 0; }
         .artigo-meta { font-size: 0.9em; color: #555; }
-
-        /* Formulário de Novo Artigo */
+        .artigo-categoria { font-size: 0.8em; color: #fff; background-color: #007bff; padding: 3px 6px; border-radius: 4px; display: inline-block; }
         #form-novo-artigo { background: #f9f9f9; padding: 20px; border-radius: 8px; margin-top: 30px; }
         #form-novo-artigo h2 { margin-top: 0; }
         #form-novo-artigo div { margin-bottom: 15px; }
@@ -21,28 +20,15 @@
         #form-novo-artigo button { padding: 10px 15px; background-color: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer; }
         #form-novo-artigo button:hover { background-color: #218838; }
         #logout-button { background: #dc3545; color: white; padding: 10px 15px; border: none; border-radius: 4px; cursor: pointer; float: right; }
-
-        /* --- ESTILOS DOS COMENTÁRIOS (NOVO) --- */
-        .comentarios-secao {
-            background: #fafafa;
-            border-top: 1px dashed #ccc;
-            margin-top: 15px;
-            padding: 10px;
-        }
-        .comentario {
-            border-bottom: 1px solid #eee;
-            padding: 8px 0;
-            font-size: 0.95em;
-        }
+        .comentarios-secao { background: #fafafa; border-top: 1px dashed #ccc; margin-top: 15px; padding: 10px; }
+        .comentario { border-bottom: 1px solid #eee; padding: 8px 0; font-size: 0.95em; }
         .comentario strong { color: #0056b3; }
         .comentario-form { margin-top: 10px; }
         .comentario-form input, .comentario-form textarea { width: 95%; padding: 5px; }
         .comentario-form button { padding: 5px 10px; background-color: #555; color: white; border: none; margin-top: 5px; }
-
     </style>
 </head>
 <body>
-
 <div class="container">
     <button id="logout-button">Sair</button>
     <h1>Blog de Artigos</h1>
@@ -61,7 +47,7 @@
             <div>
                 <label for="categoriaId">Categoria:</label>
                 <select id="categoriaId" required>
-                    <option value="1">Geral</option>
+                    <option value="">Carregando categorias...</option>
                 </select>
             </div>
             <button type="submit">Publicar</button>
@@ -74,179 +60,172 @@
     </div>
 </div>
 
-<script>
-    // Pega o token salvo no login
-    const token = localStorage.getItem('jwt_token');
 
-    // Função para fazer Logout
+<script>
+    // --- (Token, Logout, getUsuarioIdFromToken, Comentários, etc... tudo igual) ---
+    const token = localStorage.getItem('jwt_token');
     document.getElementById('logout-button').addEventListener('click', () => {
         localStorage.removeItem('jwt_token');
-        window.location.href = '/'; // Volta para o login
-    });
-
-    // 1. Verifica se o usuário está logado
-    if (!token) {
         window.location.href = '/';
-    }
-
-    // Função para decodificar o ID do usuário do token (simplificado)
+    });
+    if (!token) { window.location.href = '/'; }
     function getUsuarioIdFromToken(token) {
         try {
             const payload = JSON.parse(atob(token.split('.')[1]));
             return payload.id;
-        } catch (e) {
-            console.error('Token inválido:', e);
-            return null;
-        }
+        } catch (e) { console.error('Token inválido:', e); return null; }
     }
     const usuarioId = getUsuarioIdFromToken(token);
-
-
-    // --- FUNÇÕES DE COMENTÁRIOS (NOVAS) ---
-
-    // 3. Busca e exibe os comentários de um artigo
     async function carregarComentarios(artigoId, container) {
         const response = await fetch(`/comentarios/${artigoId}`, { method: 'GET' });
         if (!response.ok) return;
-
         const comentarios = await response.json();
-        container.innerHTML = '<h4>Comentários:</h4>'; // Limpa o "Carregando..."
-
+        container.innerHTML = '<h4>Comentários:</h4>';
         if (comentarios.length === 0) {
             container.innerHTML += '<p>Seja o primeiro a comentar!</p>';
         }
-
         comentarios.forEach(comentario => {
             const div = document.createElement('div');
             div.className = 'comentario';
-            div.innerHTML = `
-                    <p><strong>${comentario.autor}:</strong> ${comentario.texto}</p>
-                `;
+            div.innerHTML = `<p><strong>${comentario.autor}:</strong> ${comentario.texto}</p>`;
             container.appendChild(div);
         });
     }
-
-    // 4. Submete um novo comentário
     async function submeterComentario(event) {
         event.preventDefault();
         const form = event.target;
-        const artigoId = form.dataset.artigoId; // Pega o ID do artigo do formulário
+        const artigoId = form.dataset.artigoId;
         const autor = form.querySelector('.comentario-autor').value;
         const texto = form.querySelector('.comentario-texto').value;
-
         if (!artigoId || !autor || !texto) return;
-
-        const body = {
-            artigoId: artigoId,
-            autor: autor,
-            texto: texto
-        };
-
+        const body = { artigoId: artigoId, autor: autor, texto: texto };
         const response = await fetch('/comentarios', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(body)
         });
-
         if (response.ok) {
-            form.reset(); // Limpa o formulário de comentário
+            form.reset();
             const container = form.closest('.comentarios-secao').querySelector('.comentarios-lista');
-            await carregarComentarios(artigoId, container); // Recarrega os comentários
+            await carregarComentarios(artigoId, container);
         } else {
             alert('Erro ao enviar comentário.');
         }
     }
-
-    // --- FIM DAS FUNÇÕES DE COMENTÁRIOS ---
-
 
     // 2. Busca e exibe os artigos (MODIFICADA)
     async function carregarArtigos() {
         const lista = document.getElementById('artigos-lista');
         lista.innerHTML = 'Carregando...';
 
+        // Agora estamos buscando da View
         const response = await fetch('/artigos', { method: 'GET' });
         const artigos = await response.json();
 
-        lista.innerHTML = ''; // Limpa o "Carregando..."
+        lista.innerHTML = '';
 
         artigos.forEach(artigo => {
             const div = document.createElement('div');
             div.className = 'artigo';
 
-            // --- CONTEÚDO NOVO AQUI ---
+            // --- CORREÇÃO APLICADA AQUI ---
             div.innerHTML = `
-                    <h3>${artigo.titulo}</h3>
-                    <p>${artigo.conteudo.substring(0, 150)}...</p>
-                    <p class="artigo-meta">Por: <strong>${artigo.usuario.nome}</strong></p>
+                <span class="artigo-categoria">${artigo.categoriaNome}</span>
 
-                    <div class="comentarios-secao">
-                        <div class="comentarios-lista" id="comentarios-${artigo.id}">
-                            Carregando comentários...
-                        </div>
+                <h3>${artigo.titulo}</h3>
+                <p>${artigo.conteudo.substring(0, 150)}...</p>
 
-                        <form class="comentario-form" onsubmit="submeterComentario(event)" data-artigo-id="${artigo.id}">
-                            <input type="text" class="comentario-autor" placeholder="Seu nome" required>
-                            <textarea class="comentario-texto" rows="2" placeholder="Escreva um comentário..." required></textarea>
-                            <button type="submit">Comentar</button>
-                        </form>
+                <p class="artigo-meta">Por: <strong>${artigo.autorNome}</strong></p>
+
+                <div class="comentarios-secao">
+                    <div class="comentarios-lista" id="comentarios-${artigo.artigoId}">
+                        Carregando comentários...
                     </div>
-                `;
-            // --- FIM DO CONTEÚDO NOVO ---
+
+                    <form class="comentario-form" onsubmit="submeterComentario(event)" data-artigo-id="${artigo.artigoId}">
+                        <input type="text" class="comentario-autor" placeholder="Seu nome" required>
+                        <textarea class="comentario-texto" rows="2" placeholder="Escreva um comentário..." required></textarea>
+                        <button type="submit">Comentar</button>
+                    </form>
+                </div>
+            `;
+            // --- FIM DA CORREÇÃO ---
 
             lista.appendChild(div);
 
-            // (Novo) Carrega os comentários para este artigo
-            const containerComentarios = div.querySelector(`#comentarios-${artigo.id}`);
-            carregarComentarios(artigo.id, containerComentarios);
+            // Carrega os comentários (Modificado para usar 'artigoId' da view)
+            const containerComentarios = div.querySelector(`#comentarios-${artigo.artigoId}`);
+            carregarComentarios(artigo.artigoId, containerComentarios);
         });
     }
 
-    // 5. Lógica para ENVIAR o formulário de novo artigo (Sem alteração)
+    // --- (Função carregarCategorias continua a mesma) ---
+    async function carregarCategorias() {
+        const selectCategoria = document.getElementById('categoriaId');
+        try {
+            const response = await fetch('/categorias', { method: 'GET' });
+            if (!response.ok) { throw new Error('Falha ao carregar categorias.'); }
+            const categorias = await response.json();
+            selectCategoria.innerHTML = '';
+            const defaultOption = document.createElement('option');
+            defaultOption.value = "";
+            defaultOption.textContent = "Selecione uma categoria";
+            defaultOption.disabled = true;
+            defaultOption.selected = true;
+            selectCategoria.appendChild(defaultOption);
+            categorias.forEach(categoria => {
+                const option = document.createElement('option');
+                option.value = categoria.id;
+                option.textContent = categoria.nome;
+                selectCategoria.appendChild(option);
+            });
+        } catch (error) {
+            console.error(error.message);
+            selectCategoria.innerHTML = '<option value="">Erro ao carregar</option>';
+        }
+    }
+
+    // --- (Função de submit do formulário de artigo continua a mesma) ---
     document.getElementById('novo-artigo-form').addEventListener('submit', async function(event) {
         event.preventDefault();
-
         const titulo = document.getElementById('titulo').value;
         const conteudo = document.getElementById('conteudo').value;
         const categoriaId = document.getElementById('categoriaId').value;
         const formError = document.getElementById('form-error');
-
+        if (!categoriaId) {
+            formError.textContent = "Por favor, selecione uma categoria.";
+            return;
+        }
         const body = {
             titulo: titulo,
             conteudo: conteudo,
-            usuarioId: usuarioId, // Pego do token
-            categoriaId: parseInt(categoriaId) // Converte para número
+            usuarioId: usuarioId,
+            categoriaId: parseInt(categoriaId)
         };
-
         try {
             const response = await fetch('/artigos', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}` // Envia o token!
+                    'Authorization': `Bearer ${token}`
                 },
                 body: JSON.stringify(body)
             });
+            if (response.status === 403) { throw new Error('Acesso negado. Você não tem permissão de AUTOR.'); }
+            if (!response.ok) { throw new Error('Erro ao publicar o artigo.'); }
 
-            if (response.status === 403) {
-                throw new Error('Acesso negado. Você não tem permissão de AUTOR.');
-            }
-            if (!response.ok) {
-                throw new Error('Erro ao publicar o artigo.');
-            }
-
-            // Se deu certo:
             formError.textContent = '';
-            document.getElementById('novo-artigo-form').reset(); // Limpa o formulário
-            await carregarArtigos(); // Atualiza a lista de artigos
-
+            document.getElementById('novo-artigo-form').reset();
+            document.getElementById('categoriaId').selectedIndex = 0;
+            await carregarArtigos();
         } catch (error) {
             formError.textContent = error.message;
         }
     });
 
-    // Carrega os artigos assim que a página abre
+    // Carrega os artigos E as categorias assim que a página abre
     carregarArtigos();
+    carregarCategorias();
 
 </script>
 </body>

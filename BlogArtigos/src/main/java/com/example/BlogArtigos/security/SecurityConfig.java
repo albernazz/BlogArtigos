@@ -31,10 +31,11 @@ public class SecurityConfig {
                 .authorizeHttpRequests(authorize -> authorize
                         // --- Regras de Permissão ---
                         .requestMatchers(HttpMethod.GET, "/").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/home").permitAll() // <-- CORREÇÃO AQUI
+                        .requestMatchers(HttpMethod.GET, "/home").permitAll()
                         .requestMatchers(HttpMethod.POST, "/login").permitAll()
                         .requestMatchers(HttpMethod.POST, "/registrar").permitAll()
                         .requestMatchers(HttpMethod.GET, "/artigos").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/categorias").permitAll()
                         .requestMatchers(HttpMethod.GET, "/comentarios/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/comentarios").permitAll()
                         .requestMatchers(HttpMethod.POST, "/artigos").hasAnyAuthority("AUTOR", "ADMIN")
