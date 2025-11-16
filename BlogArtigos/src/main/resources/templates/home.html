@@ -4,45 +4,19 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Home - Blog</title>
-    <style>
-        body { font-family: Arial, sans-serif; background-color: #f4f4f4; margin: 0; padding: 20px; }
-        .container { max-width: 900px; margin: auto; background: #fff; padding: 20px; border-radius: 8px; }
-        #artigos-lista { margin-top: 20px; }
-        .artigo { border: 1px solid #ccc; padding: 15px; margin-bottom: 15px; border-radius: 5px; position: relative; }
-        .artigo h3 { margin-top: 0; }
-        .artigo-meta { font-size: 0.9em; color: #555; }
-        .artigo-categoria { font-size: 0.8em; color: #fff; background-color: #007bff; padding: 3px 6px; border-radius: 4px; display: inline-block; }
-        .edit-button { position: absolute; top: 10px; right: 10px; font-size: 0.8em; padding: 5px 10px; background-color: #ffc107; color: black; border-radius: 3px; text-decoration: none; border: none; cursor: pointer; }
-        .edit-button:hover { background-color: #e0a800; }
-        #form-novo-artigo { background: #f9f9f9; padding: 20px; border-radius: 8px; margin-top: 30px; }
-        #form-novo-artigo h2 { margin-top: 0; }
-        #form-novo-artigo div { margin-bottom: 15px; }
-        #form-novo-artigo label { display: block; margin-bottom: 5px; font-weight: bold; }
-        #form-novo-artigo input, #form-novo-artigo textarea, #form-novo-artigo select { width: 98%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; }
-        #form-novo-artigo button { padding: 10px 15px; background-color: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer; }
-        #form-novo-artigo button:hover { background-color: #218838; }
-        #logout-button { background: #dc3545; color: white; padding: 10px 15px; border: none; border-radius: 4px; cursor: pointer; float: right; }
-        .comentarios-secao { background: #fafafa; border-top: 1px dashed #ccc; margin-top: 15px; padding: 10px; }
-        .comentario { border-bottom: 1px solid #eee; padding: 8px 0; font-size: 0.95em; }
-        .comentario strong { color: #0056b3; }
-        .comentario-form { margin-top: 10px; }
-        .comentario-form input, .comentario-form textarea { width: 95%; padding: 5px; }
-        .comentario-form button { padding: 5px 10px; background-color: #555; color: white; border: none; margin-top: 5px; }
-
-        /* --- ESTILO NOVO (Busca) --- */
-        #search-container { margin: 20px 0; }
-        #search-container label { font-weight: bold; }
-        #search-bar { width: 98%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; }
-    </style>
-</head>
+    <link rel="stylesheet" href="/css/style.css"> </head>
 <body>
 <div class="container">
     <button id="logout-button">Sair</button>
-    <h1>Blog de Artigos</h1>
+    <div class="header-links">
+        <h1>Blog de Artigos</h1>
 
-    <a href="/stats" style="display: inline-block; margin-bottom: 20px;">Ver Estatísticas de Autores</a>
+        <a href="/stats" id="stats-link" style="display: none; display: inline-block; margin-bottom: 20px;">
+            Ver Estatísticas de Autores (Admin)
+        </a>
+    </div>
 
-    <div id="form-novo-artigo">
+    <div id="form-novo-artigo" class="form-container">
         <h2>Publicar Novo Artigo</h2>
         <form id="novo-artigo-form">
             <div>
@@ -59,314 +33,20 @@
                     <option value="">Carregando categorias...</option>
                 </select>
             </div>
-            <button type="submit">Publicar</button>
-            <div id="form-error" style="color: red; margin-top: 10px;"></div>
+            <button type="submit" class="btn-submit">Publicar</button>
+            <div id="form-error" class="form-message error"></div>
         </form>
     </div>
 
     <div id="search-container">
-        <label for="search-bar">Buscar Artigos por Título (Usa o Índice!):</label>
+        <label for="search-bar">Buscar Artigos por Título:</label>
         <input type="text" id="search-bar" placeholder="Digite um título...">
     </div>
+
     <h2>Artigos Recentes</h2>
     <div id="artigos-lista">
     </div>
 </div>
 
-
-<script>
-    // --- (Token, Logout, getUsuarioIdFromToken, Comentários... tudo igual) ---
-    const token = localStorage.getItem('jwt_token');
-    document.getElementById('logout-button').addEventListener('click', () => {
-        localStorage.removeItem('jwt_token');
-        window.location.href = '/';
-    });
-    if (!token) { window.location.href = '/'; }
-    function getUsuarioIdFromToken(token) {
-        try {
-            const payload = JSON.parse(atob(token.split('.')[1]));
-            return payload.id;
-        } catch (e) { console.error('Token inválido:', e); return null; }
-    }
-    const usuarioId = getUsuarioIdFromToken(token);
-    async function carregarComentarios(artigoId, container) { /* ... (código oculto, é o mesmo de antes) ... */ }
-    async function submeterComentario(event) { /* ... (código oculto, é o mesmo de antes) ... */ }
-
-    // 2. Busca e exibe os artigos (MODIFICADA PARA ACEITAR BUSCA)
-    async function carregarArtigos(termoDeBusca = "") { // 1. Aceita parâmetro
-        const lista = document.getElementById('artigos-lista');
-        lista.innerHTML = 'Carregando...';
-
-        // 2. Constrói a URL dinamicamente
-        let url = '/artigos';
-        if (termoDeBusca) {
-            url = `/artigos?busca=${encodeURIComponent(termoDeBusca)}`;
-        }
-
-        // 3. Usa a nova URL no fetch
-        const response = await fetch(url, { method: 'GET' });
-        const artigos = await response.json();
-
-        lista.innerHTML = '';
-
-        if (artigos.length === 0) {
-            lista.innerHTML = '<p>Nenhum artigo encontrado.</p>';
-        }
-
-        artigos.forEach(artigo => {
-            // (O código de renderização do artigo com botão Editar e Comentários é o mesmo)
-            const div = document.createElement('div');
-            div.className = 'artigo';
-            let editButtonHtml = `<a href="/editar/${artigo.artigoId}" class="edit-button">Editar</a>`;
-            div.innerHTML = `
-                ${editButtonHtml}
-                <span class="artigo-categoria">${artigo.categoriaNome}</span>
-                <h3>${artigo.titulo}</h3>
-                <p>${artigo.conteudo.substring(0, 150)}...</p>
-                <p class="artigo-meta">Por: <strong>${artigo.autorNome}</strong></p>
-                <div class="comentarios-secao">
-                    <div class="comentarios-lista" id="comentarios-${artigo.artigoId}">...</div>
-                    <form class="comentario-form" onsubmit="submeterComentario(event)" data-artigo-id="${artigo.artigoId}">
-                        <input type="text" class="comentario-autor" placeholder="Seu nome" required>
-                        <textarea class="comentario-texto" rows="2" placeholder="Escreva um comentário..." required></textarea>
-                        <button type="submit">Comentar</button>
-                    </form>
-                </div>
-            `;
-            lista.appendChild(div);
-            const containerComentarios = div.querySelector(`#comentarios-${artigo.artigoId}`);
-            carregarComentarios(artigo.artigoId, containerComentarios);
-        });
-    }
-
-    // 3. Carrega as Categorias (sem alteração)
-    async function carregarCategorias() { /* ... (código oculto, é o mesmo de antes) ... */ }
-
-    // 4. Submit do Formulário de Artigo (sem alteração)
-    document.getElementById('novo-artigo-form').addEventListener('submit', async function(event) { /* ... (código oculto, é o mesmo de antes) ... */ });
-
-    // --- 5. LÓGICA DE BUSCA (NOVA) ---
-    let debounceTimer;
-    document.getElementById('search-bar').addEventListener('input', (event) => {
-        // Limpa o timer anterior
-        clearTimeout(debounceTimer);
-
-        const termo = event.target.value;
-
-        // Configura um novo timer para esperar 500ms após o usuário parar de digitar
-        debounceTimer = setTimeout(() => {
-            carregarArtigos(termo); // Chama a função de carregar com o termo de busca
-        }, 500);
-    });
-    // --- FIM DA LÓGICA DE BUSCA ---
-
-    // Carrega os artigos E as categorias assim que a página abre
-    carregarArtigos(); // A chamada inicial agora usa o termoDeBusca="" (vazio)
-    carregarCategorias();
-
-</script>
-<script>
-    // Pega o token salvo no login
-    const token = localStorage.getItem('jwt_token');
-
-    // Função para fazer Logout
-    document.getElementById('logout-button').addEventListener('click', () => {
-        localStorage.removeItem('jwt_token');
-        window.location.href = '/';
-    });
-
-    // 1. Verifica se o usuário está logado
-    if (!token) {
-        window.location.href = '/';
-    }
-
-    // Função para decodificar o ID do usuário do token
-    function getUsuarioIdFromToken(token) {
-        try {
-            const payload = JSON.parse(atob(token.split('.')[1]));
-            return payload.id; // Retorna o ID (ex: 'USR-0001')
-        } catch (e) {
-            console.error('Token inválido:', e);
-            return null;
-        }
-    }
-    const usuarioId = getUsuarioIdFromToken(token);
-
-    // --- FUNÇÕES DE COMENTÁRIOS (Completas) ---
-    async function carregarComentarios(artigoId, container) {
-        const response = await fetch(`/comentarios/${artigoId}`, { method: 'GET' });
-        if (!response.ok) return;
-        const comentarios = await response.json();
-        container.innerHTML = '<h4>Comentários:</h4>';
-        if (comentarios.length === 0) {
-            container.innerHTML += '<p>Seja o primeiro a comentar!</p>';
-        }
-        comentarios.forEach(comentario => {
-            const div = document.createElement('div');
-            div.className = 'comentario';
-            div.innerHTML = `<p><strong>${comentario.autor}:</strong> ${comentario.texto}</p>`;
-            container.appendChild(div);
-        });
-    }
-
-    async function submeterComentario(event) {
-        event.preventDefault();
-        const form = event.target;
-        const artigoId = form.dataset.artigoId;
-        const autor = form.querySelector('.comentario-autor').value;
-        const texto = form.querySelector('.comentario-texto').value;
-        if (!artigoId || !autor || !texto) return;
-        const body = { artigoId: artigoId, autor: autor, texto: texto };
-        const response = await fetch('/comentarios', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(body)
-        });
-        if (response.ok) {
-            form.reset();
-            const container = form.closest('.comentarios-secao').querySelector('.comentarios-lista');
-            await carregarComentarios(artigoId, container);
-        } else {
-            alert('Erro ao enviar comentário.');
-        }
-    }
-    // --- FIM DAS FUNÇÕES DE COMENTÁRIOS ---
-
-    // 2. Busca e exibe os artigos (MODIFICADA PARA ACEITAR BUSCA)
-    async function carregarArtigos(termoDeBusca = "") { // 1. Aceita parâmetro
-        const lista = document.getElementById('artigos-lista');
-        lista.innerHTML = 'Carregando...';
-
-        // 2. Constrói a URL dinamicamente
-        let url = '/artigos';
-        if (termoDeBusca) {
-            url = `/artigos?busca=${encodeURIComponent(termoDeBusca)}`;
-        }
-
-        // 3. Usa a nova URL no fetch
-        const response = await fetch(url, { method: 'GET' });
-        const artigos = await response.json();
-
-        lista.innerHTML = '';
-
-        if (artigos.length === 0) {
-            lista.innerHTML = '<p>Nenhum artigo encontrado.</p>';
-            return;
-        }
-
-        artigos.forEach(artigo => {
-            const div = document.createElement('div');
-            div.className = 'artigo';
-
-            let editButtonHtml = `<a href="/editar/${artigo.artigoId}" class="edit-button">Editar</a>`;
-
-            div.innerHTML = `
-                ${editButtonHtml}
-                <span class="artigo-categoria">${artigo.categoriaNome}</span>
-                <h3>${artigo.titulo}</h3>
-                <p>${artigo.conteudo.substring(0, 150)}...</p>
-                <p class="artigo-meta">Por: <strong>${artigo.autorNome}</strong></p>
-
-                <div class="comentarios-secao">
-                    <div class="comentarios-lista" id="comentarios-${artigo.artigoId}">
-                        Carregando comentários...
-                    </div>
-                    <form class="comentario-form" onsubmit="submeterComentario(event)" data-artigo-id="${artigo.artigoId}">
-                        <input type="text" class="comentario-autor" placeholder="Seu nome" required>
-                        <textarea class="comentario-texto" rows="2" placeholder="Escreva um comentário..." required></textarea>
-                        <button type="submit">Comentar</button>
-                    </form>
-                </div>
-            `;
-            lista.appendChild(div);
-            const containerComentarios = div.querySelector(`#comentarios-${artigo.artigoId}`);
-            carregarComentarios(artigo.artigoId, containerComentarios);
-        });
-    }
-
-    // 3. Carrega as Categorias (Completa)
-    async function carregarCategorias() {
-        const selectCategoria = document.getElementById('categoriaId');
-        try {
-            const response = await fetch('/categorias', { method: 'GET' });
-            if (!response.ok) { throw new Error('Falha ao carregar categorias.'); }
-            const categorias = await response.json();
-            selectCategoria.innerHTML = '';
-            const defaultOption = document.createElement('option');
-            defaultOption.value = "";
-            defaultOption.textContent = "Selecione uma categoria";
-            defaultOption.disabled = true;
-            defaultOption.selected = true;
-            selectCategoria.appendChild(defaultOption);
-            categorias.forEach(categoria => {
-                const option = document.createElement('option');
-                option.value = categoria.id;
-                option.textContent = categoria.nome;
-                selectCategoria.appendChild(option);
-            });
-        } catch (error) {
-            console.error(error.message);
-            selectCategoria.innerHTML = '<option value="">Erro ao carregar</option>';
-        }
-    }
-
-    // 4. Submit do Formulário de Artigo (Completa)
-    document.getElementById('novo-artigo-form').addEventListener('submit', async function(event) {
-        event.preventDefault();
-        const titulo = document.getElementById('titulo').value;
-        const conteudo = document.getElementById('conteudo').value;
-        const categoriaId = document.getElementById('categoriaId').value;
-        const formError = document.getElementById('form-error');
-        if (!categoriaId) {
-            formError.textContent = "Por favor, selecione uma categoria.";
-            return;
-        }
-        const body = {
-            titulo: titulo,
-            conteudo: conteudo,
-            usuarioId: usuarioId,
-            categoriaId: parseInt(categoriaId)
-        };
-        try {
-            const response = await fetch('/artigos', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
-                },
-                body: JSON.stringify(body)
-            });
-            if (response.status === 403) { throw new Error('Acesso negado. Você não tem permissão de AUTOR.'); }
-            if (!response.ok) { throw new Error('Erro ao publicar o artigo.'); }
-
-            formError.textContent = '';
-            document.getElementById('novo-artigo-form').reset();
-            document.getElementById('categoriaId').selectedIndex = 0;
-            await carregarArtigos(); // Recarrega todos os artigos (sem busca)
-        } catch (error) {
-            formError.textContent = error.message;
-        }
-    });
-
-    // --- 5. LÓGICA DE BUSCA (NOVA) ---
-    let debounceTimer;
-    document.getElementById('search-bar').addEventListener('input', (event) => {
-        // Limpa o timer anterior
-        clearTimeout(debounceTimer);
-
-        const termo = event.target.value;
-
-        // Configura um novo timer para esperar 500ms após o usuário parar de digitar
-        debounceTimer = setTimeout(() => {
-            carregarArtigos(termo); // Chama a função de carregar com o termo de busca
-        }, 500);
-    });
-    // --- FIM DA LÓGICA DE BUSCA ---
-
-    // Carrega os artigos E as categorias assim que a página abre
-    carregarArtigos(); // A chamada inicial agora usa o termoDeBusca="" (vazio)
-    carregarCategorias();
-
-</script>
-</body>
+<script src="/js/home.js" defer></script> </body>
 </html>

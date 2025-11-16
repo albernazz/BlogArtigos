@@ -1,4 +1,3 @@
-
 package com.example.BlogArtigos.usuarios;
 
 import com.example.BlogArtigos.gruposusuarios.GruposUsuarios;
@@ -17,7 +16,7 @@ import java.util.List;
 @Table(name = "usuarios")
 @Entity
 @Getter
-@Setter // Adicionado Setter para flexibilidade
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 public class Usuarios implements UserDetails {
@@ -32,32 +31,29 @@ public class Usuarios implements UserDetails {
     private String email;
 
     @Column(nullable = false)
-    private String senha; // Em um projeto real, isso deve ser HASHED (bcrypt)
+    private String senha;
 
-    @ManyToOne // Muitos usuários podem pertencer a um grupo
-    @JoinColumn(name = "grupo_id", nullable = false) // Chave estrangeira
+    @ManyToOne
+    @JoinColumn(name = "grupo_id", nullable = false)
     private GruposUsuarios grupo;
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        // 2. Aqui informamos ao Spring qual é o "Papel" (Role) do usuário
-        // Usamos o nome do grupo que vem do banco (ex: 'ROLE_ADMIN', 'ROLE_AUTOR')
-        // O Spring Security precisa que os papéis comecem com "ROLE_"
-        // Seu Blog.sql já criou os ROLES assim, perfeito!
-        return List.of(new SimpleGrantedAuthority(grupo.getNomeGrupo()));
+        return List.of(
+                new SimpleGrantedAuthority("ROLE_" + grupo.getNomeGrupo().toUpperCase().trim())
+        );
     }
 
     @Override
     public String getPassword() {
-        return this.senha; // 3. O Spring vai pegar a senha daqui
+        return this.senha;
     }
 
     @Override
     public String getUsername() {
-        return this.email; // 4. O "username" para o Spring será o email
+        return this.email;
     }
 
-    // --- Métodos de status da conta (pode deixar true por padrão) ---
     @Override
     public boolean isAccountNonExpired() {
         return true;
@@ -77,5 +73,4 @@ public class Usuarios implements UserDetails {
     public boolean isEnabled() {
         return true;
     }
-
 }

@@ -1,7 +1,9 @@
+
 package com.example.BlogArtigos.controller;
 
-import com.example.BlogArtigos.gruposusuarios.GruposUsuariosRepository; // Vai precisar ser criado
+import com.example.BlogArtigos.gruposusuarios.GruposUsuariosRepository;
 import com.example.BlogArtigos.security.DtoAuth;
+import com.example.BlogArtigos.security.DtoRegistro;
 import com.example.BlogArtigos.security.DtoToken;
 import com.example.BlogArtigos.security.TokenService;
 import com.example.BlogArtigos.usuarios.Usuarios;
@@ -18,75 +20,60 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping // Deixamos o mapping principal em branco
+@RequestMapping
 public class AuthController {
 
     @Autowired
     private AuthenticationManager manager;
-
     @Autowired
     private TokenService tokenService;
-
     @Autowired
     private UsuariosRepository usuariosRepository;
-
     @Autowired
-    private PasswordEncoder passwordEncoder; // Injeta o BCrypt
-
+    private PasswordEncoder passwordEncoder;
     @Autowired
-    private GruposUsuariosRepository gruposUsuariosRepository; // Injeta o novo repository
+    private GruposUsuariosRepository gruposUsuariosRepository;
 
-    /**
-     * Endpoint público para login.
-     * Recebe email e senha, devolve um token JWT.
-     */
     @PostMapping("/login")
     public ResponseEntity<DtoToken> efetuarLogin(@RequestBody @Valid DtoAuth data) {
-
-        // 1. Cria o token de autenticação (ainda não validado)
         var authToken = new UsernamePasswordAuthenticationToken(data.email(), data.senha());
-
-        // 2. O Spring Security valida o usuário e a senha (usando o BCrypt)
         var authentication = manager.authenticate(authToken);
-
-        // 3. Se deu certo, gera o token JWT
         var usuario = (Usuarios) authentication.getPrincipal();
         var tokenJWT = tokenService.gerarToken(usuario);
-
-        // 4. Devolve o token
         return ResponseEntity.ok(new DtoToken(tokenJWT));
     }
 
-    /**
-     * Endpoint temporário para registrar um novo usuário (AUTOR).
-     * Essencial para cadastrar a primeira senha criptografada (BCrypt).
-     */
+    // --- MÉTODO MODIFICADO ---
     @PostMapping("/registrar")
-    public ResponseEntity<String> registrarNovoUsuario(@RequestBody @Valid DtoAuth data) {
+    public ResponseEntity<String> registrarNovoUsuario(@RequestBody @Valid DtoRegistro data) {
 
         if (usuariosRepository.findByEmail(data.email()).isPresent()) {
             return ResponseEntity.badRequest().body("Email já está em uso.");
         }
 
         // --- CORREÇÃO AQUI ---
-        // Mude de 2L (Long) para 2 (int, que vira Integer)
-        var grupoAutor = gruposUsuariosRepository.findById(2)
-                .orElseThrow(() -> new RuntimeException("Grupo 'AUTOR' (ID 2) não foi encontrado no banco!"));
-        // --- FIM DA CORREÇÃO ---
+        // 1. Validação de segurança: Não permitir que ninguém se registe como ADMIN (ID 1)
+        if (data.grupoId() == 1) {
+            return ResponseEntity.badRequest().body("Tipo de conta inválido.");
+        }
+
+        // 2. Busca o grupo dinamicamente (2 para AUTOR, 3 para LEITOR)
+        var grupoSelecionado = gruposUsuariosRepository.findById(data.grupoId())
+                .orElseThrow(() -> new RuntimeException("Grupo selecionado (ID " + data.grupoId() + ") não foi encontrado!"));
 
         var senhaCriptografada = passwordEncoder.encode(data.senha());
         String novoId = usuariosRepository.callGeraIdUsuario();
 
         Usuarios novoUsuario = new Usuarios(
                 novoId,
-                "Autor " + data.email().split("@")[0],
+                data.nome(),
                 data.email(),
                 senhaCriptografada,
-                grupoAutor
+                grupoSelecionado // <-- Salva com o grupo selecionado
         );
 
         usuariosRepository.save(novoUsuario);
 
-        return ResponseEntity.ok("Usuário 'AUTOR' registrado com sucesso! ID: " + novoId);
+        return ResponseEntity.ok("Usuário registrado com sucesso! ID: " + novoId);
     }
 }

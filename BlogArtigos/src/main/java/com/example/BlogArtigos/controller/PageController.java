@@ -2,9 +2,9 @@
 package com.example.BlogArtigos.controller;
 
 import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model; // Importar
+import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable; // Importar
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 
 @Controller
@@ -26,16 +26,20 @@ public class PageController {
         return "estatisticas";
     }
 
-    // --- ENDPOINT NOVO ---
-    /**
-     * Mapeia a URL /editar/{id}
-     * Passa o 'id' do artigo para o modelo do Thymeleaf,
-     * para que o JavaScript na página 'editar.html' possa lê-lo.
-     */
     @GetMapping("/editar/{id}")
     public String getEditarPage(@PathVariable String id, Model model) {
-        model.addAttribute("artigoId", id); // Passa o ID para o HTML
-        return "editar"; // Serve o editar.html
+        model.addAttribute("artigoId", id);
+        return "editar";
+    }
+
+    // --- MÉTODO NOVO ---
+    /**
+     * Mapeia a URL /registrar
+     * @return O nome do arquivo 'registrar.html'
+     */
+    @GetMapping("/registrar")
+    public String getRegistroPage() {
+        return "registrar"; // Serve o registrar.html
     }
     // --- FIM DO NOVO ---
 }

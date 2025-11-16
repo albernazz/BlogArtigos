@@ -1,12 +1,14 @@
-
+// Substitua em: com/example/BlogArtigos/controller/ComentarioController.java
 package com.example.BlogArtigos.controller;
 
 import com.example.BlogArtigos.comentarios.Comentario;
 import com.example.BlogArtigos.comentarios.ComentarioRepository;
 import com.example.BlogArtigos.comentarios.ComentarioRequestDto;
+import com.example.BlogArtigos.usuarios.Usuarios; // Importar
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal; // Importar
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -19,33 +21,34 @@ public class ComentarioController {
     private ComentarioRepository repository;
 
     /**
-     * Endpoint público para listar todos os comentários de um artigo específico.
-     * Busca no MongoDB pelo ID do artigo (que é do MySQL).
+     * Endpoint público para listar comentários
      */
     @GetMapping("/{artigoId}")
     public ResponseEntity<List<Comentario>> getComentariosPorArtigo(@PathVariable String artigoId) {
-        // Usa o método que criamos no repository
         List<Comentario> comentarios = repository.findByArtigoId(artigoId);
         return ResponseEntity.ok(comentarios);
     }
 
+    // --- MÉTODO MODIFICADO ---
     /**
-     * Endpoint público para qualquer um postar um novo comentário.
+     * Endpoint protegido para postar um novo comentário.
+     * O nome do autor é pego automaticamente do utilizador logado.
      */
     @PostMapping
-    public ResponseEntity<Comentario> adicionarComentario(@RequestBody @Valid ComentarioRequestDto data) {
+    public ResponseEntity<Comentario> adicionarComentario(
+            @RequestBody @Valid ComentarioRequestDto data,
+            @AuthenticationPrincipal Usuarios usuarioLogado // 1. Recebe o utilizador logado
+    ) {
 
-        // Converte o DTO para a Entidade Comentario
+        // 2. Converte o DTO (que não tem 'autor') para a Entidade
         Comentario novoComentario = new Comentario(
                 data.artigoId(),
-                data.autor(),
+                usuarioLogado.getNome(), // 3. Usa o nome do utilizador do token
                 data.texto()
         );
 
-        // Salva o novo comentário no MongoDB
         Comentario comentarioSalvo = repository.save(novoComentario);
 
-        // Retorna o comentário salvo (com ID e data de publicação)
         return ResponseEntity.status(201).body(comentarioSalvo);
     }
 }

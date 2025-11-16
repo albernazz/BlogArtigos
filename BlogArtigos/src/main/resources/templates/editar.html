@@ -4,27 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Editar Artigo - Blog</title>
-    <style>
-        body { font-family: Arial, sans-serif; background-color: #f4f4f4; margin: 0; padding: 20px; }
-        .container { max-width: 900px; margin: auto; background: #fff; padding: 20px; border-radius: 8px; }
-        form { background: #f9f9f9; padding: 20px; border-radius: 8px; margin-top: 30px; }
-        form h2 { margin-top: 0; }
-        form div { margin-bottom: 15px; }
-        form label { display: block; margin-bottom: 5px; font-weight: bold; }
-        form input, form textarea { width: 98%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; }
-        form button { padding: 10px 15px; background-color: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; }
-        .nav-link { display: inline-block; margin-bottom: 20px; color: #007bff; text-decoration: none; }
-        #form-message { margin-top: 10px; }
-    </style>
-</head>
+    <link rel="stylesheet" href="/css/style.css"> </head>
 <body th:attr="data-artigo-id=${artigoId}">
 
 <div class="container">
     <a href="/home" class="nav-link">&larr; Voltar para a Home</a>
 
-    <form id="editar-artigo-form">
+    <form id="editar-artigo-form" class="form-container">
         <h2>Editar Artigo</h2>
-        <input type="hidden" id="artigoId">
         <div>
             <label for="titulo">Título:</label>
             <input type="text" id="titulo" required>
@@ -33,82 +20,10 @@
             <label for="conteudo">Conteúdo:</label>
             <textarea id="conteudo" rows="10" required></textarea>
         </div>
-        <button type="submit">Salvar Alterações</button>
-        <div id="form-message">Carregando dados...</div>
+        <button type="submit" class="btn-principal">Salvar Alterações</button>
+        <div id="form-message" class="form-message">Carregando dados...</div>
     </form>
 </div>
 
-<script>
-    const token = localStorage.getItem('jwt_token');
-    // 1. Redireciona se não estiver logado
-    if (!token) { window.location.href = '/'; }
-
-    // 2. Pega o ID do artigo do atributo 'data-artigo-id'
-    const artigoId = document.body.dataset.artigoId;
-    const form = document.getElementById('editar-artigo-form');
-    const tituloInput = document.getElementById('titulo');
-    const conteudoInput = document.getElementById('conteudo');
-    const messageDiv = document.getElementById('form-message');
-
-    // 3. Busca os dados atuais do artigo
-    async function carregarArtigo() {
-        try {
-            // Chama o novo endpoint GET /artigos/{id}
-            const response = await fetch(`/artigos/${artigoId}`, { method: 'GET' });
-            if (!response.ok) { throw new Error('Artigo não encontrado.'); }
-
-            const artigo = await response.json();
-
-            // 4. Preenche o formulário
-            tituloInput.value = artigo.titulo;
-            conteudoInput.value = artigo.conteudo;
-            messageDiv.textContent = ''; // Limpa "Carregando..."
-
-        } catch (error) {
-            messageDiv.style.color = 'red';
-            messageDiv.textContent = error.message;
-        }
-    }
-
-    // 5. Envia as alterações (UPDATE)
-    form.addEventListener('submit', async function(event) {
-        event.preventDefault();
-        messageDiv.textContent = 'Salvando...';
-
-        const body = {
-            titulo: tituloInput.value,
-            conteudo: conteudoInput.value
-        };
-
-        try {
-            // Chama o novo endpoint PUT /artigos/{id}
-            const response = await fetch(`/artigos/${artigoId}`, {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}` // Envia o token!
-                },
-                body: JSON.stringify(body)
-            });
-
-            if (response.status === 403) { throw new Error('Acesso negado. Você não tem permissão de AUTOR.'); }
-            if (!response.ok) { throw new Error('Erro ao salvar alterações.'); }
-
-            // Sucesso!
-            messageDiv.style.color = 'green';
-            messageDiv.textContent = 'Artigo atualizado com sucesso!';
-
-            // Opcional: redirecionar de volta para a home
-            setTimeout(() => { window.location.href = '/home'; }, 2000);
-
-        } catch (error) {
-            messageDiv.style.color = 'red';
-            messageDiv.textContent = error.message;
-        }
-    });
-
-    // Inicia o carregamento dos dados
-    carregarArtigo();
-</script>
-</body>
+<script src="/js/editar.js" defer></script> </body>
 </html>

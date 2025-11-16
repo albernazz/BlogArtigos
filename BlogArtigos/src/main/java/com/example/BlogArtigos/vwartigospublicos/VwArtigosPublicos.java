@@ -24,6 +24,11 @@ public class VwArtigosPublicos {
     @Column(name = "artigo_id")
     private String artigoId;
 
+    // --- CAMPO NOVO ---
+    @Column(name = "usuario_id")
+    private String usuarioId; // O ID do autor do post
+    // --- FIM DO CAMPO NOVO ---
+
     @Column(name = "titulo")
     private String titulo;
 
@@ -37,8 +42,8 @@ public class VwArtigosPublicos {
     private LocalDateTime dataModificacao;
 
     @Column(name = "autor_nome")
-    private String autorNome; // Vem do JOIN com usuarios
+    private String autorNome;
 
     @Column(name = "categoria_nome")
-    private String categoriaNome; // Vem do JOIN com categorias
+    private String categoriaNome;
 }

@@ -28,18 +28,25 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(authorize -> authorize
-                        // --- Regras de Permissão ---
+                        // Libera arquivos estáticos (CSS/JS)
+                        .requestMatchers("/css/**", "/js/**").permitAll()
+
+                        .requestMatchers(HttpMethod.GET, "/registrar").permitAll()
                         .requestMatchers(HttpMethod.GET, "/").permitAll()
                         .requestMatchers(HttpMethod.GET, "/home").permitAll()
+
+                        // --- ALTERAÇÃO AQUI (Tornado público) ---
                         .requestMatchers(HttpMethod.GET, "/stats").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/editar/**").permitAll() // <-- CORREÇÃO AQUI
+                        .requestMatchers(HttpMethod.GET, "/estatisticas").permitAll()
+                        // --- FIM DA ALTERAÇÃO ---
+
+                        .requestMatchers(HttpMethod.GET, "/editar/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/login").permitAll()
                         .requestMatchers(HttpMethod.POST, "/registrar").permitAll()
                         .requestMatchers(HttpMethod.GET, "/artigos/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/categorias").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/estatisticas").permitAll()
                         .requestMatchers(HttpMethod.GET, "/comentarios/**").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/comentarios").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/comentarios").authenticated()
                         .requestMatchers(HttpMethod.PUT, "/artigos/**").hasAnyAuthority("AUTOR", "ADMIN")
                         .requestMatchers(HttpMethod.POST, "/artigos").hasAnyAuthority("AUTOR", "ADMIN")
                         .anyRequest().authenticated()
