@@ -1,4 +1,3 @@
-// Substitua em: src/main/resources/static/js/home.js
 document.addEventListener('DOMContentLoaded', () => {
     const token = localStorage.getItem('jwt_token');
 
@@ -7,21 +6,23 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
     }
 
+    // --- Elementos do DOM ---
     const logoutButton = document.getElementById('logout-button');
+    const novoArtigoFormContainer = document.getElementById('form-novo-artigo'); // Modificado
     const novoArtigoForm = document.getElementById('novo-artigo-form');
     const searchBar = document.getElementById('search-bar');
     const artigosLista = document.getElementById('artigos-lista');
     const statsLink = document.getElementById('stats-link');
+    const toggleFormBtn = document.getElementById('toggle-form-btn'); // <-- NOVO
 
     let debounceTimer;
 
+    // --- Decodificador de Token ---
     function getUsuarioInfoFromToken(token) {
+        // ... (código idêntico)
         try {
             const payload = JSON.parse(atob(token.split('.')[1]));
-            return {
-                id: payload.id,
-                roles: payload.scope || []
-            };
+            return { id: payload.id, roles: payload.scope || [] };
         } catch (e) {
             console.error('Token inválido:', e);
             localStorage.removeItem('jwt_token');
@@ -33,26 +34,32 @@ document.addEventListener('DOMContentLoaded', () => {
     const usuarioLogado = getUsuarioInfoFromToken(token);
     if (!usuarioLogado) return;
 
-    // --- Lógica de UI (Visibilidade) (MODIFICADA) ---
+    // --- Lógica de UI (Visibilidade) ---
     function setupUIBasedOnRoles() {
-
-        // --- CORREÇÃO AQUI (1/2) ---
-        // Agora procura pela role com o prefixo "ROLE_"
         if (usuarioLogado.roles.includes('ROLE_ADMIN')) {
             statsLink.style.display = 'inline-block';
         } else {
             statsLink.style.display = 'none';
         }
 
-        // --- CORREÇÃO AQUI (2/2) ---
-        // Agora procura pelas roles com o prefixo "ROLE_"
-        if (!usuarioLogado.roles.includes('ROLE_AUTOR') && !usuarioLogado.roles.includes('ROLE_ADMIN')) {
-            document.getElementById('form-novo-artigo').style.display = 'none';
+        // --- CORREÇÃO AQUI ---
+        // Agora mostramos/escondemos o BOTÃO, não o formulário
+        if (usuarioLogado.roles.includes('ROLE_AUTOR') || usuarioLogado.roles.includes('ROLE_ADMIN')) {
+            toggleFormBtn.style.display = 'block';
+        } else {
+            toggleFormBtn.style.display = 'none';
         }
+
+        // Listener para o botão de toggle
+        toggleFormBtn.addEventListener('click', () => {
+            const isHidden = novoArtigoFormContainer.style.display === 'none';
+            novoArtigoFormContainer.style.display = isHidden ? 'block' : 'none';
+            toggleFormBtn.textContent = isHidden ? 'Esconder Formulário -' : 'Publicar Novo Artigo +';
+        });
+        // --- FIM DA CORREÇÃO ---
     }
-    // --- FIM DA MODIFICAÇÃO ---
 
-
+    // --- (Logout, Busca, Novo Artigo, Categorias, Artigos, Comentários... tudo idêntico) ---
     logoutButton.addEventListener('click', () => {
         localStorage.removeItem('jwt_token');
         window.location.href = '/';
@@ -73,19 +80,16 @@ document.addEventListener('DOMContentLoaded', () => {
         const categoriaId = document.getElementById('categoriaId').value;
         const formError = document.getElementById('form-error');
         formError.textContent = '';
-
         if (!categoriaId) {
             formError.textContent = "Por favor, selecione uma categoria.";
             return;
         }
-
         const body = {
             titulo: titulo,
             conteudo: conteudo,
             usuarioId: usuarioLogado.id,
             categoriaId: parseInt(categoriaId)
         };
-
         try {
             const response = await fetch('/artigos', {
                 method: 'POST',
@@ -100,6 +104,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
             novoArtigoForm.reset();
             document.getElementById('categoriaId').selectedIndex = 0;
+            // Esconde o formulário e recarrega
+            novoArtigoFormContainer.style.display = 'none';
+            toggleFormBtn.textContent = 'Publicar Novo Artigo +';
             await carregarArtigos();
         } catch (error) {
             formError.textContent = error.message;
@@ -111,17 +118,14 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             const response = await fetch('/categorias', { method: 'GET' });
             if (!response.ok) { throw new Error('Falha ao carregar categorias.'); }
-
             const categorias = await response.json();
             selectCategoria.innerHTML = '';
-
             const defaultOption = document.createElement('option');
             defaultOption.value = "";
             defaultOption.textContent = "Selecione uma categoria";
             defaultOption.disabled = true;
             defaultOption.selected = true;
             selectCategoria.appendChild(defaultOption);
-
             categorias.forEach(categoria => {
                 const option = document.createElement('option');
                 option.value = categoria.id;
@@ -136,32 +140,25 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function carregarArtigos(termoDeBusca = "") {
         artigosLista.innerHTML = '<p>Carregando...</p>';
-
         let url = '/artigos';
         if (termoDeBusca) {
             url = `/artigos?busca=${encodeURIComponent(termoDeBusca)}`;
         }
-
         try {
             const response = await fetch(url, { method: 'GET' });
             const artigos = await response.json();
-
             artigosLista.innerHTML = '';
-
             if (artigos.length === 0) {
                 artigosLista.innerHTML = '<p>Nenhum artigo encontrado.</p>';
                 return;
             }
-
             artigos.forEach(artigo => {
                 const div = document.createElement('div');
                 div.className = 'artigo';
-
                 let editButtonHtml = '';
                 if (usuarioLogado.id === artigo.usuarioId) {
                     editButtonHtml = `<a href="/editar/${artigo.artigoId}" class="edit-button">Editar</a>`;
                 }
-
                 div.innerHTML = `
                     ${editButtonHtml}
                     <span class="artigo-categoria">${artigo.categoriaNome}</span> 
@@ -174,16 +171,14 @@ document.addEventListener('DOMContentLoaded', () => {
                             <p>Carregando comentários...</p>
                         </div>
                         <form class="comentario-form" data-artigo-id="${artigo.artigoId}">
-                            <textarea class="comentario-texto" rows="2" placeholder="Escreva um comentário..." required></textarea>
+                            <textarea class="comentario-texto" rows="3" placeholder="Escreva um comentário..." required></textarea>
                             <button type="submit">Comentar</button>
                         </form>
                     </div>
                 `;
                 artigosLista.appendChild(div);
-
                 const containerComentarios = div.querySelector(`#comentarios-${artigo.artigoId}`);
                 carregarComentarios(artigo.artigoId, containerComentarios);
-
                 div.querySelector('.comentario-form').addEventListener('submit', submeterComentario);
             });
         } catch (error) {
@@ -216,12 +211,10 @@ document.addEventListener('DOMContentLoaded', () => {
         const form = event.target;
         const artigoId = form.dataset.artigoId;
         const textoInput = form.querySelector('.comentario-texto');
-
         const body = {
             artigoId: artigoId,
             texto: textoInput.value
         };
-
         try {
             const response = await fetch('/comentarios', {
                 method: 'POST',
@@ -231,10 +224,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 },
                 body: JSON.stringify(body)
             });
-
             if (response.status === 403) { throw new Error('Acesso negado. Faça login para comentar.'); }
             if (!response.ok) { throw new Error('Erro ao enviar comentário.'); }
-
             form.reset();
             const container = form.closest('.comentarios-secao').querySelector('.comentarios-lista');
             await carregarComentarios(artigoId, container);

@@ -1,171 +1,244 @@
-/* --- 1. Estilos Globais e Reset Simples --- */
+/* --- 1. Importação de Fonte e Variáveis de Cor --- */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap');
+
+:root {
+    --cor-primaria: #007bff;
+    --cor-sucesso: #198754;
+    --cor-perigo: #dc3545;
+    --cor-aviso: #ffc107;
+    --cor-texto-primario: #212529;
+    --cor-texto-secundario: #6C757D;
+    --cor-fundo: #F8F9FA;
+    --cor-superficie: #FFFFFF;
+    --cor-borda: #DEE2E6;
+}
+
+/* --- 2. Estilos Globais --- */
 body {
-    font-family: Arial, sans-serif;
-    background-color: #f4f4f4;
+    font-family: 'Inter', Arial, sans-serif;
+    background-color: var(--cor-fundo);
+    color: var(--cor-texto-primario);
     margin: 0;
     padding: 20px;
+    line-height: 1.6;
 }
 
 .container {
     max-width: 900px;
-    margin: auto;
-    background: #fff;
-    padding: 20px;
-    border-radius: 8px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    margin: 40px auto;
+    background: var(--cor-superficie);
+    padding: 30px;
+    border-radius: 12px;
+    border: 1px solid var(--cor-borda);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
 }
 
 a {
-    color: #007bff;
+    color: var(--cor-primaria);
     text-decoration: none;
+    transition: color 0.2s;
 }
 a:hover {
     text-decoration: underline;
 }
 
-/* --- 2. Formulários (Login, Novo Artigo, Editar) --- */
+h1, h2, h3, h4 {
+    margin-top: 0;
+    font-weight: 700;
+}
+h2 {
+    border-bottom: 1px solid var(--cor-borda);
+    padding-bottom: 10px;
+}
+
+/* --- 3. Formulários --- */
 .form-container {
-    background: #f9f9f9;
+    background: #fdfdfd;
     padding: 25px;
     border-radius: 8px;
     margin-top: 20px;
-    border: 1px solid #eee;
+    border: 1px solid var(--cor-borda);
 }
 .form-container h2 {
-    margin-top: 0;
-    border-bottom: 2px solid #eee;
-    padding-bottom: 10px;
+    border-bottom: none;
+    padding-bottom: 0;
+    margin-bottom: 20px;
 }
 .form-container div {
     margin-bottom: 15px;
 }
 .form-container label {
     display: block;
-    margin-bottom: 5px;
-    font-weight: bold;
+    margin-bottom: 8px;
+    font-weight: 500;
 }
 .form-container input[type="text"],
 .form-container input[type="email"],
 .form-container input[type="password"],
 .form-container textarea,
 .form-container select {
-    width: 98%;
-    padding: 10px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
+    width: 100%;
+    padding: 12px;
+    border: 1px solid var(--cor-borda);
+    border-radius: 6px;
+    box-sizing: border-box; /* Garante que o padding não quebre o layout */
+    transition: border-color 0.2s, box-shadow 0.2s;
 }
-.form-container button {
+.form-container input:focus,
+.form-container textarea:focus,
+.form-container select:focus {
+    outline: none;
+    border-color: var(--cor-primaria);
+    box-shadow: 0 0 0 3px rgba(0,123,255,0.15);
+}
+
+/* --- 4. Botões Específicos --- */
+.btn {
     padding: 12px 18px;
     color: white;
     border: none;
-    border-radius: 4px;
+    border-radius: 6px;
     cursor: pointer;
     font-size: 1em;
+    font-weight: 500;
+    transition: background-color 0.2s, transform 0.2s, box-shadow 0.2s;
 }
-
-/* --- 3. Botões Específicos --- */
+.btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
 #logout-button {
-    background: #dc3545;
+    background: var(--cor-perigo);
     padding: 10px 15px;
     border: none;
-    border-radius: 4px;
+    border-radius: 6px;
     cursor: pointer;
     float: right;
     color: white;
+    font-weight: 500;
+    transition: background-color 0.2s;
 }
-.btn-submit { background-color: #28a745; } /* Botão Publicar */
-.btn-submit:hover { background-color: #218838; }
-.btn-principal { background-color: #007bff; } /* Botão Entrar / Salvar */
-.btn-principal:hover { background-color: #0056b3; }
+#logout-button:hover { background-color: #c82333; }
+
+.btn-submit { background-color: var(--cor-sucesso); }
+.btn-submit:hover { background-color: #157347; }
+.btn-principal { background-color: var(--cor-primaria); }
+.btn-principal:hover { background-color: #0069d9; }
 
 /* Mensagens de Erro/Sucesso */
 .form-message {
     margin-top: 15px;
     font-size: 0.9em;
+    font-weight: 500;
 }
-.error { color: red; }
-.success { color: green; }
+.error { color: var(--cor-perigo); }
+.success { color: var(--cor-sucesso); }
 
 
-/* --- 4. Página de Login (Centralizada) --- */
+/* --- 5. Página de Login (Centralizada) --- */
 body.login-page {
     display: grid;
     place-items: center;
     min-height: 90vh;
 }
-#login-form {
-    width: 350px;
+#login-form, #registro-form {
+    width: 380px;
 }
-#login-form button {
+#login-form button, #registro-form button {
     width: 100%;
 }
 
-/* --- 5. Página Home --- */
+/* --- 6. Página Home --- */
 .header-links {
     display: flex;
     justify-content: space-between;
     align-items: center;
     margin-bottom: 20px;
     flex-wrap: wrap;
+    border-bottom: 1px solid var(--cor-borda);
+    padding-bottom: 15px;
 }
+.header-links h1 { border: none; }
+.header-links a { font-weight: 500; }
 
 /* Barra de Busca */
-#search-container { margin: 20px 0; }
-#search-container label { font-weight: bold; margin-bottom: 5px; display: block; }
-#search-bar { width: 98%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; }
+#search-container { margin: 30px 0; }
+#search-container label { font-weight: 700; margin-bottom: 8px; display: block; }
+#search-bar { width: 100%; padding: 12px; border: 1px solid var(--cor-borda); border-radius: 6px; box-sizing: border-box; }
 
 /* Lista de Artigos */
 #artigos-lista { margin-top: 20px; }
 .artigo {
-    border: 1px solid #ddd;
-    padding: 20px;
+    background: var(--cor-superficie);
+    border: 1px solid var(--cor-borda);
+    padding: 25px;
     margin-bottom: 20px;
-    border-radius: 5px;
-    position: relative; /* Para o botão editar */
+    border-radius: 8px;
+    position: relative;
+    transition: box-shadow 0.2s;
 }
-.artigo h3 { margin-top: 0; }
-.artigo-meta { font-size: 0.9em; color: #555; }
+.artigo:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+.artigo h3 {
+    margin-bottom: 10px;
+    color: var(--cor-primaria);
+}
+.artigo p {
+    color: var(--cor-texto-secundario);
+}
+.artigo-meta {
+    font-size: 0.9em;
+    color: #888;
+    margin-top: 15px;
+}
 .artigo-categoria {
     font-size: 0.8em;
-    color: #fff;
-    background-color: #007bff;
-    padding: 3px 8px;
-    border-radius: 4px;
+    font-weight: 700;
+    color: var(--cor-primaria);
+    background-color: rgba(0,123,255,0.1);
+    padding: 4px 10px;
+    border-radius: 20px;
     display: inline-block;
     margin-bottom: 10px;
 }
 .edit-button {
     position: absolute;
-    top: 15px;
-    right: 15px;
+    top: 20px;
+    right: 20px;
     font-size: 0.8em;
     padding: 5px 10px;
-    background-color: #ffc107;
+    background-color: var(--cor-aviso);
     color: black;
-    border-radius: 3px;
+    border-radius: 4px;
     text-decoration: none;
     border: none;
     cursor: pointer;
+    font-weight: 500;
+    transition: background-color 0.2s;
 }
 .edit-button:hover { background-color: #e0a800; }
 
 /* Seção de Comentários */
 .comentarios-secao {
-    background: #fafafa;
-    border-top: 1px dashed #ccc;
+    background: var(--cor-fundo);
+    border-top: 1px solid var(--cor-borda);
     margin-top: 20px;
-    padding: 15px;
+    padding: 20px;
+    border-radius: 0 0 8px 8px;
+    margin: 20px -25px -25px -25px; /* Ajusta para "grudar" no fundo do card */
 }
 .comentarios-secao h4 { margin-top: 0; }
 .comentario {
-    border-bottom: 1px solid #eee;
-    padding: 8px 0;
+    border-bottom: 1px solid var(--cor-borda);
+    padding: 10px 0;
     font-size: 0.95em;
+    color: var(--cor-texto-secundario);
 }
-.comentario strong { color: #0056b3; }
-.comentario-form { margin-top: 10px; }
-.comentario-form input, .comentario-form textarea { width: 97%; padding: 8px; border: 1px solid #ddd; }
-.comentario-form textarea { margin-top: 5px; }
+.comentario:last-child { border-bottom: none; }
+.comentario strong { color: var(--cor-texto-primario); }
+.comentario-form { margin-top: 15px; }
+.comentario-form textarea { width: 100%; padding: 10px; border: 1px solid var(--cor-borda); border-radius: 6px; box-sizing: border-box; margin-top: 5px; }
 .comentario-form button {
     padding: 8px 12px;
     background-color: #555;
@@ -173,27 +246,54 @@ body.login-page {
     border: none;
     margin-top: 5px;
     cursor: pointer;
+    border-radius: 6px;
+    transition: background-color 0.2s;
 }
+.comentario-form button:hover { background-color: #333; }
 
-/* --- 6. Página de Estatísticas --- */
+/* --- 7. Página de Estatísticas --- */
 table {
     width: 100%;
     border-collapse: collapse;
     margin-top: 20px;
+    font-size: 0.95em;
 }
 th, td {
-    border: 1px solid #ddd;
-    padding: 12px;
+    border: 1px solid var(--cor-borda);
+    padding: 12px 15px;
     text-align: left;
 }
 th {
-    background-color: #f9f9f9;
+    background-color: var(--cor-fundo);
+    font-weight: 700;
 }
 tr:nth-child(even) {
-    background-color: #fdfdfd;
+    background-color: var(--cor-fundo);
 }
 .nav-link {
     display: inline-block;
     margin-bottom: 20px;
-    font-weight: bold;
+    font-weight: 700;
+    font-size: 1.1em;
+}
+
+/* --- 8. UX (Formulário Colapsável) --- */
+.toggle-form-btn {
+    width: 100%;
+    padding: 12px;
+    background-color: var(--cor-primaria);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 1.1em;
+    font-weight: 700;
+    margin-bottom: 20px;
+    transition: background-color 0.2s;
+}
+.toggle-form-btn:hover {
+    background-color: #0069d9;
+}
+#form-novo-artigo {
+    display: none; /* Escondido por defeito */
 }

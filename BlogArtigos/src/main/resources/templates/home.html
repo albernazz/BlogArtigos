@@ -4,25 +4,26 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Home - Blog</title>
-    <link rel="stylesheet" href="/css/style.css"> </head>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
 <body>
 <div class="container">
     <button id="logout-button">Sair</button>
     <div class="header-links">
         <h1>Blog de Artigos</h1>
-
-        <a href="/stats" id="stats-link" style="display: none; display: inline-block; margin-bottom: 20px;">
-            Ver Estatísticas de Autores (Admin)
+        <a href="/stats" id="stats-link" style="display: none;">
+            Ver Estatísticas (Admin)
         </a>
     </div>
 
-    <div id="form-novo-artigo" class="form-container">
-        <h2>Publicar Novo Artigo</h2>
+    <button id="toggle-form-btn" class="toggle-form-btn">Publicar Novo Artigo +</button>
+
+    <div id="form-novo-artigo" class="form-container" style="display: none;">
         <form id="novo-artigo-form">
-            <div>
-                <label for="titulo">Título:</label>
-                <input type="text" id="titulo" required>
-            </div>
+            <h2>Publicar Novo Artigo</h2> <div>
+            <label for="titulo">Título:</label>
+            <input type="text" id="titulo" required>
+        </div>
             <div>
                 <label for="conteudo">Conteúdo:</label>
                 <textarea id="conteudo" rows="5" required></textarea>
@@ -33,7 +34,7 @@
                     <option value="">Carregando categorias...</option>
                 </select>
             </div>
-            <button type="submit" class="btn-submit">Publicar</button>
+            <button type="submit" class="btn btn-submit">Publicar</button>
             <div id="form-error" class="form-message error"></div>
         </form>
     </div>
@@ -48,5 +49,6 @@
     </div>
 </div>
 
-<script src="/js/home.js" defer></script> </body>
+<script src="/js/home.js" defer></script>
+</body>
 </html>

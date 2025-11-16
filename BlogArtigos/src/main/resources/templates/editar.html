@@ -4,7 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Editar Artigo - Blog</title>
-    <link rel="stylesheet" href="/css/style.css"> </head>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
 <body th:attr="data-artigo-id=${artigoId}">
 
 <div class="container">
@@ -18,12 +19,13 @@
         </div>
         <div>
             <label for="conteudo">Conteúdo:</label>
-            <textarea id="conteudo" rows="10" required></textarea>
+            <textarea id="conteudo" rows="15" required></textarea>
         </div>
         <button type="submit" class="btn-principal">Salvar Alterações</button>
-        <div id="form-message" class="form-message">Carregando dados...</div>
+        <div id="form-message" class="form-message">A carregar dados do artigo...</div>
     </form>
 </div>
 
-<script src="/js/editar.js" defer></script> </body>
+<script src="/js/editar.js" defer></script>
+</body>
 </html>
