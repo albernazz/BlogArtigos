@@ -3,14 +3,12 @@ package com.example.BlogArtigos.artigos;
 
 import com.example.BlogArtigos.usuarios.Usuarios;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*; // Importar Setter
 
 @Table(name = "artigos")
 @Entity(name = "artigos")
 @Getter
+@Setter // <-- CORREÇÃO AQUI: Permite a alteração dos campos
 @NoArgsConstructor
 @AllArgsConstructor
 @EqualsAndHashCode(of = "id")
@@ -19,10 +17,8 @@ public class Artigos {
     @Id
     private String id;
 
-    // --- CORREÇÃO AQUI ---
-    @Column(name = "titulo") // 1. Mude o nome da coluna
-    private String titulo; // 2. Renomeie o campo
-    // --- FIM DA CORREÇÃO ---
+    @Column(name = "titulo")
+    private String titulo;
 
     @Column(name = "conteudo", columnDefinition = "TEXT")
     private String conteudo;

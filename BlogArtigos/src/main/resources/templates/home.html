@@ -8,10 +8,12 @@
         body { font-family: Arial, sans-serif; background-color: #f4f4f4; margin: 0; padding: 20px; }
         .container { max-width: 900px; margin: auto; background: #fff; padding: 20px; border-radius: 8px; }
         #artigos-lista { margin-top: 20px; }
-        .artigo { border: 1px solid #ccc; padding: 15px; margin-bottom: 15px; border-radius: 5px; }
+        .artigo { border: 1px solid #ccc; padding: 15px; margin-bottom: 15px; border-radius: 5px; position: relative; }
         .artigo h3 { margin-top: 0; }
         .artigo-meta { font-size: 0.9em; color: #555; }
         .artigo-categoria { font-size: 0.8em; color: #fff; background-color: #007bff; padding: 3px 6px; border-radius: 4px; display: inline-block; }
+        .edit-button { position: absolute; top: 10px; right: 10px; font-size: 0.8em; padding: 5px 10px; background-color: #ffc107; color: black; border-radius: 3px; text-decoration: none; border: none; cursor: pointer; }
+        .edit-button:hover { background-color: #e0a800; }
         #form-novo-artigo { background: #f9f9f9; padding: 20px; border-radius: 8px; margin-top: 30px; }
         #form-novo-artigo h2 { margin-top: 0; }
         #form-novo-artigo div { margin-bottom: 15px; }
@@ -26,6 +28,11 @@
         .comentario-form { margin-top: 10px; }
         .comentario-form input, .comentario-form textarea { width: 95%; padding: 5px; }
         .comentario-form button { padding: 5px 10px; background-color: #555; color: white; border: none; margin-top: 5px; }
+
+        /* --- ESTILO NOVO (Busca) --- */
+        #search-container { margin: 20px 0; }
+        #search-container label { font-weight: bold; }
+        #search-bar { width: 98%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; }
     </style>
 </head>
 <body>
@@ -34,6 +41,7 @@
     <h1>Blog de Artigos</h1>
 
     <a href="/stats" style="display: inline-block; margin-bottom: 20px;">Ver Estatísticas de Autores</a>
+
     <div id="form-novo-artigo">
         <h2>Publicar Novo Artigo</h2>
         <form id="novo-artigo-form">
@@ -56,6 +64,10 @@
         </form>
     </div>
 
+    <div id="search-container">
+        <label for="search-bar">Buscar Artigos por Título (Usa o Índice!):</label>
+        <input type="text" id="search-bar" placeholder="Digite um título...">
+    </div>
     <h2>Artigos Recentes</h2>
     <div id="artigos-lista">
     </div>
@@ -63,7 +75,7 @@
 
 
 <script>
-    // --- (Token, Logout, getUsuarioIdFromToken, Comentários, etc... tudo igual) ---
+    // --- (Token, Logout, getUsuarioIdFromToken, Comentários... tudo igual) ---
     const token = localStorage.getItem('jwt_token');
     document.getElementById('logout-button').addEventListener('click', () => {
         localStorage.removeItem('jwt_token');
@@ -77,6 +89,110 @@
         } catch (e) { console.error('Token inválido:', e); return null; }
     }
     const usuarioId = getUsuarioIdFromToken(token);
+    async function carregarComentarios(artigoId, container) { /* ... (código oculto, é o mesmo de antes) ... */ }
+    async function submeterComentario(event) { /* ... (código oculto, é o mesmo de antes) ... */ }
+
+    // 2. Busca e exibe os artigos (MODIFICADA PARA ACEITAR BUSCA)
+    async function carregarArtigos(termoDeBusca = "") { // 1. Aceita parâmetro
+        const lista = document.getElementById('artigos-lista');
+        lista.innerHTML = 'Carregando...';
+
+        // 2. Constrói a URL dinamicamente
+        let url = '/artigos';
+        if (termoDeBusca) {
+            url = `/artigos?busca=${encodeURIComponent(termoDeBusca)}`;
+        }
+
+        // 3. Usa a nova URL no fetch
+        const response = await fetch(url, { method: 'GET' });
+        const artigos = await response.json();
+
+        lista.innerHTML = '';
+
+        if (artigos.length === 0) {
+            lista.innerHTML = '<p>Nenhum artigo encontrado.</p>';
+        }
+
+        artigos.forEach(artigo => {
+            // (O código de renderização do artigo com botão Editar e Comentários é o mesmo)
+            const div = document.createElement('div');
+            div.className = 'artigo';
+            let editButtonHtml = `<a href="/editar/${artigo.artigoId}" class="edit-button">Editar</a>`;
+            div.innerHTML = `
+                ${editButtonHtml}
+                <span class="artigo-categoria">${artigo.categoriaNome}</span>
+                <h3>${artigo.titulo}</h3>
+                <p>${artigo.conteudo.substring(0, 150)}...</p>
+                <p class="artigo-meta">Por: <strong>${artigo.autorNome}</strong></p>
+                <div class="comentarios-secao">
+                    <div class="comentarios-lista" id="comentarios-${artigo.artigoId}">...</div>
+                    <form class="comentario-form" onsubmit="submeterComentario(event)" data-artigo-id="${artigo.artigoId}">
+                        <input type="text" class="comentario-autor" placeholder="Seu nome" required>
+                        <textarea class="comentario-texto" rows="2" placeholder="Escreva um comentário..." required></textarea>
+                        <button type="submit">Comentar</button>
+                    </form>
+                </div>
+            `;
+            lista.appendChild(div);
+            const containerComentarios = div.querySelector(`#comentarios-${artigo.artigoId}`);
+            carregarComentarios(artigo.artigoId, containerComentarios);
+        });
+    }
+
+    // 3. Carrega as Categorias (sem alteração)
+    async function carregarCategorias() { /* ... (código oculto, é o mesmo de antes) ... */ }
+
+    // 4. Submit do Formulário de Artigo (sem alteração)
+    document.getElementById('novo-artigo-form').addEventListener('submit', async function(event) { /* ... (código oculto, é o mesmo de antes) ... */ });
+
+    // --- 5. LÓGICA DE BUSCA (NOVA) ---
+    let debounceTimer;
+    document.getElementById('search-bar').addEventListener('input', (event) => {
+        // Limpa o timer anterior
+        clearTimeout(debounceTimer);
+
+        const termo = event.target.value;
+
+        // Configura um novo timer para esperar 500ms após o usuário parar de digitar
+        debounceTimer = setTimeout(() => {
+            carregarArtigos(termo); // Chama a função de carregar com o termo de busca
+        }, 500);
+    });
+    // --- FIM DA LÓGICA DE BUSCA ---
+
+    // Carrega os artigos E as categorias assim que a página abre
+    carregarArtigos(); // A chamada inicial agora usa o termoDeBusca="" (vazio)
+    carregarCategorias();
+
+</script>
+<script>
+    // Pega o token salvo no login
+    const token = localStorage.getItem('jwt_token');
+
+    // Função para fazer Logout
+    document.getElementById('logout-button').addEventListener('click', () => {
+        localStorage.removeItem('jwt_token');
+        window.location.href = '/';
+    });
+
+    // 1. Verifica se o usuário está logado
+    if (!token) {
+        window.location.href = '/';
+    }
+
+    // Função para decodificar o ID do usuário do token
+    function getUsuarioIdFromToken(token) {
+        try {
+            const payload = JSON.parse(atob(token.split('.')[1]));
+            return payload.id; // Retorna o ID (ex: 'USR-0001')
+        } catch (e) {
+            console.error('Token inválido:', e);
+            return null;
+        }
+    }
+    const usuarioId = getUsuarioIdFromToken(token);
+
+    // --- FUNÇÕES DE COMENTÁRIOS (Completas) ---
     async function carregarComentarios(artigoId, container) {
         const response = await fetch(`/comentarios/${artigoId}`, { method: 'GET' });
         if (!response.ok) return;
@@ -92,6 +208,7 @@
             container.appendChild(div);
         });
     }
+
     async function submeterComentario(event) {
         event.preventDefault();
         const form = event.target;
@@ -113,22 +230,38 @@
             alert('Erro ao enviar comentário.');
         }
     }
+    // --- FIM DAS FUNÇÕES DE COMENTÁRIOS ---
 
-    // 2. Busca e exibe os artigos (Usando a View)
-    async function carregarArtigos() {
+    // 2. Busca e exibe os artigos (MODIFICADA PARA ACEITAR BUSCA)
+    async function carregarArtigos(termoDeBusca = "") { // 1. Aceita parâmetro
         const lista = document.getElementById('artigos-lista');
         lista.innerHTML = 'Carregando...';
 
-        const response = await fetch('/artigos', { method: 'GET' });
+        // 2. Constrói a URL dinamicamente
+        let url = '/artigos';
+        if (termoDeBusca) {
+            url = `/artigos?busca=${encodeURIComponent(termoDeBusca)}`;
+        }
+
+        // 3. Usa a nova URL no fetch
+        const response = await fetch(url, { method: 'GET' });
         const artigos = await response.json();
 
         lista.innerHTML = '';
+
+        if (artigos.length === 0) {
+            lista.innerHTML = '<p>Nenhum artigo encontrado.</p>';
+            return;
+        }
 
         artigos.forEach(artigo => {
             const div = document.createElement('div');
             div.className = 'artigo';
 
+            let editButtonHtml = `<a href="/editar/${artigo.artigoId}" class="edit-button">Editar</a>`;
+
             div.innerHTML = `
+                ${editButtonHtml}
                 <span class="artigo-categoria">${artigo.categoriaNome}</span>
                 <h3>${artigo.titulo}</h3>
                 <p>${artigo.conteudo.substring(0, 150)}...</p>
@@ -151,7 +284,7 @@
         });
     }
 
-    // 3. Carrega as Categorias
+    // 3. Carrega as Categorias (Completa)
     async function carregarCategorias() {
         const selectCategoria = document.getElementById('categoriaId');
         try {
@@ -177,7 +310,7 @@
         }
     }
 
-    // 4. Submit do Formulário de Artigo
+    // 4. Submit do Formulário de Artigo (Completa)
     document.getElementById('novo-artigo-form').addEventListener('submit', async function(event) {
         event.preventDefault();
         const titulo = document.getElementById('titulo').value;
@@ -209,14 +342,29 @@
             formError.textContent = '';
             document.getElementById('novo-artigo-form').reset();
             document.getElementById('categoriaId').selectedIndex = 0;
-            await carregarArtigos();
+            await carregarArtigos(); // Recarrega todos os artigos (sem busca)
         } catch (error) {
             formError.textContent = error.message;
         }
     });
 
+    // --- 5. LÓGICA DE BUSCA (NOVA) ---
+    let debounceTimer;
+    document.getElementById('search-bar').addEventListener('input', (event) => {
+        // Limpa o timer anterior
+        clearTimeout(debounceTimer);
+
+        const termo = event.target.value;
+
+        // Configura um novo timer para esperar 500ms após o usuário parar de digitar
+        debounceTimer = setTimeout(() => {
+            carregarArtigos(termo); // Chama a função de carregar com o termo de busca
+        }, 500);
+    });
+    // --- FIM DA LÓGICA DE BUSCA ---
+
     // Carrega os artigos E as categorias assim que a página abre
-    carregarArtigos();
+    carregarArtigos(); // A chamada inicial agora usa o termoDeBusca="" (vazio)
     carregarCategorias();
 
 </script>

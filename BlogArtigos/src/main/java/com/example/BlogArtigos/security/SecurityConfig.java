@@ -1,5 +1,4 @@
-// Substitua o seu arquivo em: com/example/BlogArtigos/security/SecurityConfig.java
-
+// Substitua em: com/example/BlogArtigos/security/SecurityConfig.java
 package com.example.BlogArtigos.security;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,14 +31,16 @@ public class SecurityConfig {
                         // --- Regras de Permissão ---
                         .requestMatchers(HttpMethod.GET, "/").permitAll()
                         .requestMatchers(HttpMethod.GET, "/home").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/stats").permitAll() // <-- 1. PÁGINA de Estatísticas
+                        .requestMatchers(HttpMethod.GET, "/stats").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/editar/**").permitAll() // <-- CORREÇÃO AQUI
                         .requestMatchers(HttpMethod.POST, "/login").permitAll()
                         .requestMatchers(HttpMethod.POST, "/registrar").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/artigos").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/artigos/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/categorias").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/estatisticas").permitAll() // <-- 2. API de Estatísticas
+                        .requestMatchers(HttpMethod.GET, "/estatisticas").permitAll()
                         .requestMatchers(HttpMethod.GET, "/comentarios/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/comentarios").permitAll()
+                        .requestMatchers(HttpMethod.PUT, "/artigos/**").hasAnyAuthority("AUTOR", "ADMIN")
                         .requestMatchers(HttpMethod.POST, "/artigos").hasAnyAuthority("AUTOR", "ADMIN")
                         .anyRequest().authenticated()
                 )
