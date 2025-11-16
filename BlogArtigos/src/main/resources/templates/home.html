@@ -21,6 +21,24 @@
         #form-novo-artigo button { padding: 10px 15px; background-color: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer; }
         #form-novo-artigo button:hover { background-color: #218838; }
         #logout-button { background: #dc3545; color: white; padding: 10px 15px; border: none; border-radius: 4px; cursor: pointer; float: right; }
+
+        /* --- ESTILOS DOS COMENTÁRIOS (NOVO) --- */
+        .comentarios-secao {
+            background: #fafafa;
+            border-top: 1px dashed #ccc;
+            margin-top: 15px;
+            padding: 10px;
+        }
+        .comentario {
+            border-bottom: 1px solid #eee;
+            padding: 8px 0;
+            font-size: 0.95em;
+        }
+        .comentario strong { color: #0056b3; }
+        .comentario-form { margin-top: 10px; }
+        .comentario-form input, .comentario-form textarea { width: 95%; padding: 5px; }
+        .comentario-form button { padding: 5px 10px; background-color: #555; color: white; border: none; margin-top: 5px; }
+
     </style>
 </head>
 <body>
@@ -68,25 +86,81 @@
 
     // 1. Verifica se o usuário está logado
     if (!token) {
-        // Se não tiver token, chuta de volta para a página de login
         window.location.href = '/';
     }
 
     // Função para decodificar o ID do usuário do token (simplificado)
     function getUsuarioIdFromToken(token) {
         try {
-            // Decodifica a parte do meio (payload) do JWT
             const payload = JSON.parse(atob(token.split('.')[1]));
-            return payload.id; // Retorna o ID do usuário (ex: 'USR-0001')
+            return payload.id;
         } catch (e) {
             console.error('Token inválido:', e);
             return null;
         }
     }
-
     const usuarioId = getUsuarioIdFromToken(token);
 
-    // 2. Busca e exibe os artigos
+
+    // --- FUNÇÕES DE COMENTÁRIOS (NOVAS) ---
+
+    // 3. Busca e exibe os comentários de um artigo
+    async function carregarComentarios(artigoId, container) {
+        const response = await fetch(`/comentarios/${artigoId}`, { method: 'GET' });
+        if (!response.ok) return;
+
+        const comentarios = await response.json();
+        container.innerHTML = '<h4>Comentários:</h4>'; // Limpa o "Carregando..."
+
+        if (comentarios.length === 0) {
+            container.innerHTML += '<p>Seja o primeiro a comentar!</p>';
+        }
+
+        comentarios.forEach(comentario => {
+            const div = document.createElement('div');
+            div.className = 'comentario';
+            div.innerHTML = `
+                    <p><strong>${comentario.autor}:</strong> ${comentario.texto}</p>
+                `;
+            container.appendChild(div);
+        });
+    }
+
+    // 4. Submete um novo comentário
+    async function submeterComentario(event) {
+        event.preventDefault();
+        const form = event.target;
+        const artigoId = form.dataset.artigoId; // Pega o ID do artigo do formulário
+        const autor = form.querySelector('.comentario-autor').value;
+        const texto = form.querySelector('.comentario-texto').value;
+
+        if (!artigoId || !autor || !texto) return;
+
+        const body = {
+            artigoId: artigoId,
+            autor: autor,
+            texto: texto
+        };
+
+        const response = await fetch('/comentarios', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(body)
+        });
+
+        if (response.ok) {
+            form.reset(); // Limpa o formulário de comentário
+            const container = form.closest('.comentarios-secao').querySelector('.comentarios-lista');
+            await carregarComentarios(artigoId, container); // Recarrega os comentários
+        } else {
+            alert('Erro ao enviar comentário.');
+        }
+    }
+
+    // --- FIM DAS FUNÇÕES DE COMENTÁRIOS ---
+
+
+    // 2. Busca e exibe os artigos (MODIFICADA)
     async function carregarArtigos() {
         const lista = document.getElementById('artigos-lista');
         lista.innerHTML = 'Carregando...';
@@ -99,16 +173,36 @@
         artigos.forEach(artigo => {
             const div = document.createElement('div');
             div.className = 'artigo';
+
+            // --- CONTEÚDO NOVO AQUI ---
             div.innerHTML = `
                     <h3>${artigo.titulo}</h3>
                     <p>${artigo.conteudo.substring(0, 150)}...</p>
                     <p class="artigo-meta">Por: <strong>${artigo.usuario.nome}</strong></p>
+
+                    <div class="comentarios-secao">
+                        <div class="comentarios-lista" id="comentarios-${artigo.id}">
+                            Carregando comentários...
+                        </div>
+
+                        <form class="comentario-form" onsubmit="submeterComentario(event)" data-artigo-id="${artigo.id}">
+                            <input type="text" class="comentario-autor" placeholder="Seu nome" required>
+                            <textarea class="comentario-texto" rows="2" placeholder="Escreva um comentário..." required></textarea>
+                            <button type="submit">Comentar</button>
+                        </form>
+                    </div>
                 `;
+            // --- FIM DO CONTEÚDO NOVO ---
+
             lista.appendChild(div);
+
+            // (Novo) Carrega os comentários para este artigo
+            const containerComentarios = div.querySelector(`#comentarios-${artigo.id}`);
+            carregarComentarios(artigo.id, containerComentarios);
         });
     }
 
-    // 3. Lógica para ENVIAR o formulário de novo artigo
+    // 5. Lógica para ENVIAR o formulário de novo artigo (Sem alteração)
     document.getElementById('novo-artigo-form').addEventListener('submit', async function(event) {
         event.preventDefault();
 
