@@ -33,6 +33,7 @@
     <button id="logout-button">Sair</button>
     <h1>Blog de Artigos</h1>
 
+    <a href="/stats" style="display: inline-block; margin-bottom: 20px;">Ver Estatísticas de Autores</a>
     <div id="form-novo-artigo">
         <h2>Publicar Novo Artigo</h2>
         <form id="novo-artigo-form">
@@ -113,12 +114,11 @@
         }
     }
 
-    // 2. Busca e exibe os artigos (MODIFICADA)
+    // 2. Busca e exibe os artigos (Usando a View)
     async function carregarArtigos() {
         const lista = document.getElementById('artigos-lista');
         lista.innerHTML = 'Carregando...';
 
-        // Agora estamos buscando da View
         const response = await fetch('/artigos', { method: 'GET' });
         const artigos = await response.json();
 
@@ -128,20 +128,16 @@
             const div = document.createElement('div');
             div.className = 'artigo';
 
-            // --- CORREÇÃO APLICADA AQUI ---
             div.innerHTML = `
                 <span class="artigo-categoria">${artigo.categoriaNome}</span>
-
                 <h3>${artigo.titulo}</h3>
                 <p>${artigo.conteudo.substring(0, 150)}...</p>
-
                 <p class="artigo-meta">Por: <strong>${artigo.autorNome}</strong></p>
 
                 <div class="comentarios-secao">
                     <div class="comentarios-lista" id="comentarios-${artigo.artigoId}">
                         Carregando comentários...
                     </div>
-
                     <form class="comentario-form" onsubmit="submeterComentario(event)" data-artigo-id="${artigo.artigoId}">
                         <input type="text" class="comentario-autor" placeholder="Seu nome" required>
                         <textarea class="comentario-texto" rows="2" placeholder="Escreva um comentário..." required></textarea>
@@ -149,17 +145,13 @@
                     </form>
                 </div>
             `;
-            // --- FIM DA CORREÇÃO ---
-
             lista.appendChild(div);
-
-            // Carrega os comentários (Modificado para usar 'artigoId' da view)
             const containerComentarios = div.querySelector(`#comentarios-${artigo.artigoId}`);
             carregarComentarios(artigo.artigoId, containerComentarios);
         });
     }
 
-    // --- (Função carregarCategorias continua a mesma) ---
+    // 3. Carrega as Categorias
     async function carregarCategorias() {
         const selectCategoria = document.getElementById('categoriaId');
         try {
@@ -185,7 +177,7 @@
         }
     }
 
-    // --- (Função de submit do formulário de artigo continua a mesma) ---
+    // 4. Submit do Formulário de Artigo
     document.getElementById('novo-artigo-form').addEventListener('submit', async function(event) {
         event.preventDefault();
         const titulo = document.getElementById('titulo').value;

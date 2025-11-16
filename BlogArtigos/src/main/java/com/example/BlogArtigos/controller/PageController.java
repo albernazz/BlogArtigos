@@ -15,14 +15,19 @@ public class PageController {
         return "login"; // Serve o login.html
     }
 
-    // --- ADICIONE ESTE MÉTODO ---
-    /**
-     * Mapeia a URL /home
-     * @return O nome do arquivo 'home.html'
-     */
     @GetMapping("/home")
     public String getHomePage() {
-        return "home"; // O Spring procura por 'src/main/resources/templates/home.html'
+        return "home"; // Serve o home.html
+    }
+
+    // --- ADICIONE ESTE MÉTODO ---
+    /**
+     * Mapeia a URL /stats
+     * @return O nome do arquivo 'estatisticas.html'
+     */
+    @GetMapping("/stats")
+    public String getStatsPage() {
+        return "estatisticas"; // Serve o estatisticas.html
     }
     // --- FIM DA ADIÇÃO ---
 }

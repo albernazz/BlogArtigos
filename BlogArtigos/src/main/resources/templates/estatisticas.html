@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="pt-br" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Estatísticas - Blog</title>
+    <style>
+        body { font-family: Arial, sans-serif; background-color: #f4f4f4; margin: 0; padding: 20px; }
+        .container { max-width: 900px; margin: auto; background: #fff; padding: 20px; border-radius: 8px; }
+        h1 { border-bottom: 2px solid #eee; padding-bottom: 10px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
+        th { background-color: #f9f9f9; }
+        tr:nth-child(even) { background-color: #fdfdfd; }
+        .nav-link { display: inline-block; margin-bottom: 20px; color: #007bff; text-decoration: none; }
+        .nav-link:hover { text-decoration: underline; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <a href="/home" class="nav-link">&larr; Voltar para a Home</a>
+    <h1>Estatísticas de Autores</h1>
+    <p>Dados dos <strong>autores</strong></p>
+
+    <table id="stats-table">
+        <thead>
+        <tr>
+            <th>ID do Autor</th>
+            <th>Nome</th>
+            <th>Email</th>
+            <th>Grupo</th>
+            <th>Total de Artigos</th>
+        </tr>
+        </thead>
+        <tbody id="stats-body">
+        </tbody>
+    </table>
+</div>
+
+<script>
+    async function carregarEstatisticas() {
+        const tbody = document.getElementById('stats-body');
+        tbody.innerHTML = '<tr><td colspan="5">Carregando...</td></tr>';
+
+        try {
+            // 1. Chama o novo endpoint da API
+            const response = await fetch('/estatisticas', { method: 'GET' });
+            if (!response.ok) {
+                throw new Error('Falha ao buscar estatísticas.');
+            }
+
+            const dados = await response.json();
+            tbody.innerHTML = ''; // Limpa o "Carregando..."
+
+            if (dados.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5">Nenhum autor encontrado.</td></tr>';
+                return;
+            }
+
+            // 2. Preenche a tabela
+            dados.forEach(autor => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                        <td>${autor.usuarioId}</td>
+                        <td>${autor.autorNome}</td>
+                        <td>${autor.email}</td>
+                        <td>${autor.nomeGrupo}</td>
+                        <td>${autor.totalArtigos}</td>
+                    `;
+                tbody.appendChild(tr);
+            });
+
+        } catch (error) {
+            console.error(error.message);
+            tbody.innerHTML = `<tr><td colspan="5" style="color: red;">${error.message}</td></tr>`;
+        }
+    }
+
+    // Carrega os dados assim que a página abre
+    carregarEstatisticas();
+</script>
+</body>
+</html>
