@@ -35,9 +35,11 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/").permitAll()
                         .requestMatchers(HttpMethod.GET, "/home").permitAll()
 
-                        // --- ALTERAÇÃO AQUI (Tornado público) ---
-                        .requestMatchers(HttpMethod.GET, "/stats").permitAll() // <-- LIBERADO
-                        .requestMatchers(HttpMethod.GET, "/estatisticas").permitAll() // <-- LIBERADO
+                        // --- ALTERAÇÃO AQUI (Como você pediu) ---
+                        // A PÁGINA de estatísticas agora é pública
+                        .requestMatchers(HttpMethod.GET, "/stats").permitAll()
+                        // A API de estatísticas agora é pública
+                        .requestMatchers(HttpMethod.GET, "/estatisticas").permitAll()
                         // --- FIM DA ALTERAÇÃO ---
 
                         .requestMatchers(HttpMethod.GET, "/editar/**").permitAll()
@@ -46,10 +48,15 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/artigos/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/categorias").permitAll()
                         .requestMatchers(HttpMethod.GET, "/comentarios/**").permitAll()
+
+                        // Rotas Autenticadas (Qualquer login)
                         .requestMatchers(HttpMethod.POST, "/comentarios").authenticated()
+                        .requestMatchers(HttpMethod.POST, "/artigos").authenticated() // Qualquer um logado pode postar
+
+                        // Rotas de Autor/Admin (Editar e Apagar)
                         .requestMatchers(HttpMethod.DELETE, "/artigos/**").hasAnyRole("AUTOR", "ADMIN")
                         .requestMatchers(HttpMethod.PUT, "/artigos/**").hasAnyRole("AUTOR", "ADMIN")
-                        .requestMatchers(HttpMethod.POST, "/artigos").hasAnyRole("AUTOR", "ADMIN")
+
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(securityFilter, UsernamePasswordAuthenticationFilter.class)
